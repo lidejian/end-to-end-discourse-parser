@@ -3,19 +3,20 @@
 import socket
 
 hostname = socket.gethostname()
-if hostname == "precision":
+
+if hostname == "precision": #linux 服务器
     CWD = "/home/dejian/end-to-end-discourse-parser"
-else:
+    GOOGLE_WORD2VEC_PATH = "/home/dejian/data/word2vec/GoogleNews/GoogleNews-vectors-negative300.bin"
+    BLLIP_WORD2VEC_PATH = "/home/dejian/data/BLLIP_parsed/bllip.vectors.bin"
+    ZH_WORD2VEC_PATH = "/home/dejian/data/word2vec/zh-Gigaword-300.txt"
+else:   # windows
     CWD = "D:/PY/Pycode/project/end-to-end-discourse-parser"
+    GOOGLE_WORD2VEC_PATH = "D:/data/word2vec/GoogleNews/GoogleNews-vectors-negative300.bin"
+    # BLLIP_WORD2VEC_PATH = "/home/dejian/data/BLLIP_parsed/bllip.vectors.bin"
+    ZH_WORD2VEC_PATH = "D:/data/word2vec/zh-Gigaword-300.txt"
 
 DATA_PATH = CWD + "/data"
 RECORD_PATH = CWD + "/record"
-
-GOOGLE_WORD2VEC_PATH = "D:/data/word2vec/GoogleNews/GoogleNews-vectors-negative300.bin"
-BLLIP_WORD2VEC_PATH = "/home/dejian/data/BLLIP_parsed/bllip.vectors.bin"
-ZH_WORD2VEC_PATH = "D:/data/word2vec/zh-Gigaword-300.txt"
-
-
 
 dict_sense_to_label = {
     "Comparison": 0,
