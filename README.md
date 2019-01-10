@@ -1,34 +1,9 @@
 # end-to-end-discourse-parser
 ### 环境
-python 3.6.1
+python 3.6.1  
 tensorflow 1.2.0
 
 ### 目录结构
-└─data
-    ├─en
-    ├─gen_en
-    │  ├─exp
-    │  │  ├─blind_test
-    │  │  ├─dev
-    │  │  ├─test
-    │  │  └─train
-    │  └─imp
-    │      ├─blind_test
-    │      ├─dev
-    │      ├─test
-    │      └─train
-    ├─gen_zh
-    │  ├─exp
-    │  │  ├─blind_test
-    │  │  ├─dev
-    │  │  ├─test
-    │  │  └─train
-    │  └─imp
-    │      ├─blind_test
-    │      ├─dev
-    │      ├─test
-    │      └─train
-    └─zh
 
 * data 数据文件
 	* en PDTB原始文件，其中raw为原文文件夹，parser_格式化 为标注的语篇解析
