@@ -20,7 +20,8 @@ import tensorflow as tf
 import numpy as np
 from scorer import get_rank_score_by_file
 import time
-
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 
 # from sys import version_infovim
 # print(tf.__version__)
