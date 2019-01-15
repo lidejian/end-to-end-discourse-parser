@@ -102,9 +102,9 @@ print("==> record path: %s" % record_file)
 print()
 
 evaluation_result = {
-    "f1": 0.0,
-    "p": 0.0,
-    "r": 0.0,
+    "loss": 0.0,
+    # "p": 0.0,
+    # "r": 0.0,
     "acc": 0.0
 }
 configuration = {
@@ -139,16 +139,23 @@ print("Loading data...")
 # level1_sense = FLAGS.level1_sense
 # dataset_type = FLAGS.dataset_type
 
-train_data_dir = FLAGS.train_data_dir
 
+
+train_data_dir = FLAGS.train_data_dir   # 'D:/PY/Pycode/project/end-to-end-discourse-parser/data/four_way/PDTB_imp'
+# 准备原始数据文本
 train_arg1s, train_arg2s, train_labels = data_helpers.load_data_and_labels("%s/train" % train_data_dir)
 dev_arg1s, dev_arg2s, dev_labels = data_helpers.load_data_and_labels("%s/dev" % train_data_dir)
-if FLAGS.blind:
-    test_arg1s, test_arg2s, test_labels = data_helpers.load_data_and_labels("%s/blind_test" % train_data_dir)
-else:
-    test_arg1s, test_arg2s, test_labels = data_helpers.load_data_and_labels("%s/test" % train_data_dir)
+test_arg1s, test_arg2s, test_labels = data_helpers.load_data_and_labels("%s/test" % train_data_dir)
 
 num_classes = train_labels.shape[1]
+
+
+
+
+
+
+
+
 
 print("num_classes", num_classes)
 
@@ -260,138 +267,61 @@ with tf.Graph().as_default():
 
 
             time_str = datetime.datetime.now().isoformat()
-            print(("{}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, accuracy)))
+            print(("\r {}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, accuracy)), end='')
 
-        def test_step(s1_all, s2_all, y_all):
+        def test_step(s1_all, s2_all, y_all, test_str):
             """
             Evaluates model on a dev/test set
             """
             golds = []
             predictions = []
 
-            n = len(s1_all)
-            batch_size = FLAGS.batch_size
-            start_index = 0
-            while start_index < n:
-                if start_index + batch_size <= n:
-                    s1_batch = s1_all[start_index: start_index + batch_size]
-                    s2_batch = s2_all[start_index: start_index + batch_size]
-                    y_batch = y_all[start_index: start_index + batch_size]
 
-                    feed_dict = {
-                        model.input_s1: s1_batch,
-                        model.input_s2: s2_batch,
-                        model.input_y: y_batch,
-                        model.dropout_keep_prob: 1.0
-                    }
+            feed_dict = {
+                model.input_s1: s1_all,
+                model.input_s2: s2_all,
+                model.input_y: y_all,
+                model.dropout_keep_prob: 1.0
+            }
 
-                    step, loss, accuracy, softmax_scores, curr_predictions, curr_golds = sess.run(
-                        [global_step, model.loss, model.accuracy, model.softmax_scores,
-                         model.predictions, model.golds], feed_dict)
+            step, loss, accuracy, softmax_scores, curr_predictions, curr_golds = sess.run(
+                [global_step, model.loss, model.accuracy, model.softmax_scores,
+                 model.predictions, model.golds], feed_dict)
 
-                    golds += list(curr_golds)#真实label:[2,1,2,2。。。]
-                    predictions += list(curr_predictions)
+            print('\t %s loss:' % test_str, loss)
 
-                else:
-                    left_num = n - start_index
-                    # 填充一下
-                    s1_batch = np.concatenate((s1_all[start_index:], s1_all[:batch_size - left_num]), axis=0)
-                    s2_batch = np.concatenate((s2_all[start_index:], s2_all[:batch_size - left_num]), axis=0)
-                    y_batch = np.concatenate((y_all[start_index:], y_all[:batch_size - left_num]), axis=0)
-
-                    feed_dict = {
-                        model.input_s1: s1_batch,
-                        model.input_s2: s2_batch,
-                        model.input_y: y_batch,
-                        model.dropout_keep_prob: 1.0
-                    }
-                    step, loss, accuracy, softmax_scores, curr_predictions, curr_golds = sess.run(
-                        [global_step, model.loss, model.accuracy, model.softmax_scores,
-                         model.predictions, model.golds], feed_dict)
-
-                    golds += list(curr_golds[:left_num])
-                    predictions += list(curr_predictions[:left_num])
-
-                    break
-
-                start_index += batch_size
+            golds += list(curr_golds)  # 真实label:[2,1,2,2。。。]
+            predictions += list(curr_predictions)
 
             alphabet = Alphabet()
             for i in range(num_classes):
                 alphabet.add(str(i))
             confusionMatrix = ConfusionMatrix(alphabet)
-            predictions = list(map(str, predictions))
+            predictions = list(map(str, predictions))   #[2,3,1,0,2...2]-->['2','3','1','0','2'...'2']
             golds = list(map(str, golds))
-            confusionMatrix.add_list(predictions, golds)
+            confusionMatrix.add_list(predictions, golds) # 将预测predictions和golds填入confusionMatrix.matrix的4*4表格
+            confusionMatrix.loss = loss
 
-            return confusionMatrix
+            return confusionMatrix # 主要就是4*4表格
 
 
-        def _four_way_early_stop(best_score, best_output_string):
+        def _prediction_on_dev(best_score, best_output_string):
 
-            confusionMatrix = test_step(test_arg1s, test_arg2s, test_labels)
+            confusionMatrix = test_step(dev_arg1s, dev_arg2s, dev_labels, test_str='dev') #得到4*4的矩阵
 
             acc = confusionMatrix.get_accuracy()
             # 对着 f1 调
-            p, r, f1 = confusionMatrix.get_average_prf()
+            # p, r, f1 = confusionMatrix.get_average_prf()
 
             # current performance
-            curr_output_string = confusionMatrix.get_matrix() + "\n" + confusionMatrix.get_summary()
-
-            flag = 0
-            if f1 >= best_score:
-                flag = 1
-                best_score = f1
-
-                best_output_string = confusionMatrix.get_matrix() + "\n" + confusionMatrix.get_summary()
-
-                # print("")
-                # print("\nEvaluation on Test:")
-                # confusionMatrix = test_step(test_arg1s, test_arg2s, test_labels)
-                # confusionMatrix.print_out()
-                # print("")
-
-                acc = confusionMatrix.get_accuracy()
-                p, r, f1 = confusionMatrix.get_average_prf()
-
-                evaluation_result["acc"] = "%.4f" % acc
-                evaluation_result["f1"] = "%.4f" % f1
-                evaluation_result["p"] = "%.4f" % p
-                evaluation_result["r"] = "%.4f" % r
-
-            color = colored.bg('black') + colored.fg('green')
-            reset = colored.attr('reset')
-
-            print("")
-            print("\nEvaluation on Test:")
-            print("Current Performance:")
-            print(curr_output_string)
-            if flag == 1:
-                print("  " * 40 + '❤️')
-            print((color + 'Best Performance' + reset))
-            print((color + best_output_string + reset))
-            print("")
-
-            return best_score, best_output_string
-
-
-        def _conll_early_stop(best_score, best_output_string):
-
-            confusionMatrix = test_step(test_arg1s, test_arg2s, test_labels)
-
-            # 对着 acc 调
-            acc = confusionMatrix.get_accuracy()
-            p, r, f1 = confusionMatrix.get_average_prf()
-
-            # current performance
-            curr_output_string = confusionMatrix.get_matrix() + "\n" + confusionMatrix.get_summary()
+            curr_output_string = confusionMatrix.get_matrix() + confusionMatrix.get_summary2()
 
             flag = 0
             if acc >= best_score:
                 flag = 1
                 best_score = acc
 
-                best_output_string = confusionMatrix.get_matrix() + "\n" + confusionMatrix.get_summary()
+                best_output_string = confusionMatrix.get_matrix() + confusionMatrix.get_summary2()
 
                 # print("")
                 # print("\nEvaluation on Test:")
@@ -403,24 +333,37 @@ with tf.Graph().as_default():
                 p, r, f1 = confusionMatrix.get_average_prf()
 
                 evaluation_result["acc"] = "%.4f" % acc
-                evaluation_result["f1"] = "%.4f" % f1
-                evaluation_result["p"] = "%.4f" % p
-                evaluation_result["r"] = "%.4f" % r
+                evaluation_result["loss"] = "%.4f" % confusionMatrix.loss
+                # evaluation_result["p"] = "%.4f" % p
+                # evaluation_result["r"] = "%.4f" % r
 
-            color = colored.bg('black') + colored.fg('green')
-            reset = colored.attr('reset')
+            # color = colored.bg('black') + colored.fg('green')
+            # reset = colored.attr('reset')
 
-            print("")
-            print("\nEvaluation on Test:")
+            print("\nEvaluation on Dev:")
             print("Current Performance:")
-            print(curr_output_string)
+            print('\033[34m',curr_output_string, '\033[0m') #当前结果蓝色（34）显示
+
             if flag == 1:
                 print("  " * 40 + '❤️')
-            print((color + 'Best Performance' + reset))
-            print((color + best_output_string + reset))
-            print("")
+
+            # print((color + 'Best Performance' + reset))
+            # print((color + best_output_string + reset))
+            print('\033[32m Best Performance\033[0m') #最佳结果绿色（32）显示
+            print(('\033[32m' + best_output_string + '\033[0m'))
 
             return best_score, best_output_string
+
+
+        def _prediction_on_test():
+            confusionMatrix = test_step(test_arg1s, test_arg2s, test_labels, test_str='test') #得到4*4的矩阵
+            acc = confusionMatrix.get_accuracy()
+            curr_output_string = confusionMatrix.get_matrix() + confusionMatrix.get_summary2()
+            print("\nEvaluation on Dev:")
+            print("Current Performance:")
+            print('\033[33m',curr_output_string, '\033[0m') #当前结果黄色（33）显示
+            print('\033[33m Best Performance\033[0m') #最佳结果黄色（33）显示
+
 
 
         # Generate batches
@@ -436,13 +379,13 @@ with tf.Graph().as_default():
             current_step = tf.train.global_step(sess, global_step)
             if current_step % FLAGS.evaluate_every == 0:
                 if num_classes == 4:
-                    best_score, best_output_string = _four_way_early_stop(best_score, best_output_string)
-                if num_classes in [10, 15]:
-                    best_score, best_output_string = _conll_early_stop(best_score, best_output_string)
+                    best_score, best_output_string = _prediction_on_dev(best_score, best_output_string)
+
+        _prediction_on_test()
 
 
 # record the configuration and result
-fieldnames = ["f1", "p", "r", "acc", "train_data_dir", "model", "share_rep_weights",
+fieldnames = ["loss", "acc", "train_data_dir", "model", "share_rep_weights",
                    "bidirectional", "cell_type",  "hidden_size", "num_layers",
                   "dropout_keep_prob", "l2_reg_lambda", "Optimizer", "learning_rate", "batch_size", "num_epochs", "w2v_type",
                   "additional_conf"

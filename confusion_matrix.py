@@ -24,10 +24,12 @@ class ConfusionMatrix(object):
         if alphabet is None:
             self.alphabet = Alphabet()
             self.matrix = numpy.zeros((self.INIT_NUM_CLASSES, self.INIT_NUM_CLASSES))
+            self.loss = 0.0
         else:
             self.alphabet = alphabet
             num_classes = alphabet.size()
             self.matrix = numpy.zeros((num_classes,num_classes))
+            self.loss = 0.0
 
     def __iadd__(self, other):
         self.matrix += other.matrix
@@ -157,6 +159,17 @@ class ConfusionMatrix(object):
             (numpy.mean(precision), numpy.mean(recall), numpy.mean(f1)))
         return '\n'.join(lines)
 
+    def get_summary2(self):
+        correct = 0
+        lines = []
+        # computing precision, recall, and f1
+        for i in range(self.alphabet.size()):
+            correct += self.matrix[i,i]
+
+        lines.append( '* Overall accuracy rate = %f' % (correct / sum(sum(self.matrix[:,:]))))
+        lines.append( '* Average loss %f' % self.loss)
+        return '\n'.join(lines)
+
     def get_average_prf(self):
         precision = numpy.zeros(self.alphabet.size())
         recall = numpy.zeros(self.alphabet.size())
@@ -201,6 +214,7 @@ class ConfusionMatrix(object):
         """Printing out confusion matrix along with Macro-F1 score"""
         self.print_matrix()
         self.print_summary()
+
 
 
 def matrix_to_string(matrix, header=None):

@@ -200,7 +200,7 @@ class RNN(object):
 
         # Accuracy
         with tf.name_scope("accuracy"):
-            self.golds = tf.arg_max(self.input_y, 1)
+            self.golds = tf.argmax(self.input_y, 1)
             correct_predictions = tf.equal(self.predictions, tf.argmax(self.input_y, 1))
             self.accuracy = tf.reduce_mean(tf.cast(correct_predictions, "float"), name="accuracy")
 
@@ -325,7 +325,7 @@ class Attention_RNN1(object):
 
         # Accuracy
         with tf.name_scope("accuracy"):
-            self.golds = tf.arg_max(self.input_y, 1)
+            self.golds = tf.argmax(self.input_y, 1)
             correct_predictions = tf.equal(self.predictions, tf.argmax(self.input_y, 1))
             self.accuracy = tf.reduce_mean(tf.cast(correct_predictions, "float"), name="accuracy")
 
@@ -479,7 +479,7 @@ class Attention_RNN2(object):
 
         # Accuracy
         with tf.name_scope("accuracy"):
-            self.golds = tf.arg_max(self.input_y, 1)
+            self.golds = tf.argmax(self.input_y, 1)
             correct_predictions = tf.equal(self.predictions, tf.argmax(self.input_y, 1))
             self.accuracy = tf.reduce_mean(tf.cast(correct_predictions, "float"), name="accuracy")
 
@@ -646,7 +646,7 @@ class Attention_RNN3(object):
 
         # Accuracy
         with tf.name_scope("accuracy"):
-            self.golds = tf.arg_max(self.input_y, 1)
+            self.golds = tf.argmax(self.input_y, 1)
             correct_predictions = tf.equal(self.predictions, tf.argmax(self.input_y, 1))
             self.accuracy = tf.reduce_mean(tf.cast(correct_predictions, "float"), name="accuracy")
 
@@ -847,7 +847,7 @@ class Attention_RNN4(object):
 
         # Accuracy
         with tf.name_scope("accuracy"):
-            self.golds = tf.arg_max(self.input_y, 1)
+            self.golds = tf.argmax(self.input_y, 1)
             correct_predictions = tf.equal(self.predictions, tf.argmax(self.input_y, 1))
             self.accuracy = tf.reduce_mean(tf.cast(correct_predictions, "float"), name="accuracy")
 
@@ -1010,7 +1010,7 @@ class Attention_RNN5(object):
 
         # Accuracy
         with tf.name_scope("accuracy"):
-            self.golds = tf.arg_max(self.input_y, 1)
+            self.golds = tf.argmax(self.input_y, 1)
             correct_predictions = tf.equal(self.predictions, tf.argmax(self.input_y, 1))
             self.accuracy = tf.reduce_mean(tf.cast(correct_predictions, "float"), name="accuracy")
 
@@ -1176,7 +1176,7 @@ class Attention_RNN6(object):
 
         # Accuracy
         with tf.name_scope("accuracy"):
-            self.golds = tf.arg_max(self.input_y, 1)
+            self.golds = tf.argmax(self.input_y, 1)
             correct_predictions = tf.equal(self.predictions, tf.argmax(self.input_y, 1))
             self.accuracy = tf.reduce_mean(tf.cast(correct_predictions, "float"), name="accuracy")
 
@@ -1287,6 +1287,6 @@ class CNN(object):
 
         # Accuracy
         with tf.name_scope("accuracy"):
-            self.golds = tf.arg_max(self.input_y, 1)
+            self.golds = tf.argmax(self.input_y, 1)
             correct_predictions = tf.equal(self.predictions, tf.argmax(self.input_y, 1))
             self.accuracy = tf.reduce_mean(tf.cast(correct_predictions, "float"), name="accuracy")
