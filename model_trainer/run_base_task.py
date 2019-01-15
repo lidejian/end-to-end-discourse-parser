@@ -29,14 +29,14 @@ import os
 
 
 # ''' four way'''
-# train_data_dir = config.DATA_PATH + "/four_way/PDTB_imp"
+train_data_dir = config.DATA_PATH + "/four_way/PDTB_imp"
 
 #
 # train_data_dir = config.DATA_PATH + "/cqa/QA"
 
-# # CoNLL
-train_data_dir = config.DATA_PATH + "/conll/conll_imp"
-blind = False
+# # # CoNLL
+# train_data_dir = config.DATA_PATH + "/conll/conll_imp"
+# blind = False
 
 
 # train_data_dir = config.DATA_PATH + "/ZH"
@@ -44,20 +44,20 @@ blind = False
 
 
 # model = "CNN"
-model = "RNN"
+# model = "RNN"
 # model = "Attention_RNN1"
-# model = "Attention_RNN2" # mine
+model = "Attention_RNN2" # mine
 # model = "Attention_RNN3"
 # model = "Attention_RNN4"
 # model = "Attention_RNN5"
 share_rep_weights = True
-bidirectional = True
+bidirectional = False
 cell_type = "BasicLSTM"
 hidden_size = 50
 num_layers = 1
 dropout_keep_prob = 0.5
 l2_reg_lambda = 0.0
-learning_rate = 0.005
+learning_rate = 0.001
 batch_size = 64
 num_epochs = 20
 evaluate_every = 10

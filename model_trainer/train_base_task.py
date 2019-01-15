@@ -63,8 +63,8 @@ tf.flags.DEFINE_boolean("log_device_placement", False, "Log placement of ops on 
 
 
 FLAGS = tf.flags.FLAGS
-FLAGS._parse_flags()
-# FLAGS.flag_values_dict()
+# FLAGS._parse_flags()
+FLAGS.flag_values_dict()
 print("\nParameters:")
 for attr, value in sorted(FLAGS.__flags.items()):
     print(("{}={}".format(attr.upper(), value)))
@@ -85,24 +85,18 @@ model_mapping = {
 # for recording
 
 train_data_dir = FLAGS.train_data_dir
-if "binary" in train_data_dir:
-    record_file = config.RECORD_PATH + "/single_task/%s.csv" % train_data_dir.split("/")[-1]
-elif "conll" in train_data_dir:
+if "conll" in train_data_dir:
     if FLAGS.blind:
-        record_file = config.RECORD_PATH + "/single_task/conll_blind.csv"
+        record_file = config.RECORD_PATH + "/base_task/conll_blind.csv"
     else:
-        record_file = config.RECORD_PATH + "/single_task/conll.csv"
-elif "QA" in train_data_dir:
-    record_file = config.RECORD_PATH + "/single_task/QA.csv"
-elif "QQ" in train_data_dir:
-    record_file = config.RECORD_PATH + "/single_task/QQ.csv"
+        record_file = config.RECORD_PATH + "/base_task/conll.csv"
 elif "ZH" in train_data_dir:
     if FLAGS.blind:
-        record_file = config.RECORD_PATH + "/single_task/zh_blind.csv"
+        record_file = config.RECORD_PATH + "/base_task/zh_blind.csv"
     else:
-        record_file = config.RECORD_PATH + "/single_task/zh.csv"
+        record_file = config.RECORD_PATH + "/base_task/zh.csv"
 else:
-    record_file = config.RECORD_PATH + "/single_task/four_way.csv"
+    record_file = config.RECORD_PATH + "/base_task/four_way.csv"
 
 print("==> record path: %s" % record_file)
 print()
@@ -185,7 +179,7 @@ test_arg2s = np.array(list(vocab_processor.transform(test_arg2s)))
 
 # load word embedding matrix 词向量:(n,m)n为所有文本单词个数，即下面的Vocabulary Size，m为词向量维度，google_news中为300。
 vocab_embeddings = \
-    util.load_google_word2vec_for_vocab(train_data_dir, vocab_processor.vocabulary_._mapping, from_origin=True)
+    util.load_google_word2vec_for_vocab(train_data_dir, vocab_processor.vocabulary_._mapping, from_origin=False)
 
 
 
@@ -295,7 +289,7 @@ with tf.Graph().as_default():
                         [global_step, model.loss, model.accuracy, model.softmax_scores,
                          model.predictions, model.golds], feed_dict)
 
-                    golds += list(curr_golds)
+                    golds += list(curr_golds)#真实label:[2,1,2,2。。。]
                     predictions += list(curr_predictions)
 
                 else:
@@ -331,142 +325,6 @@ with tf.Graph().as_default():
             confusionMatrix.add_list(predictions, golds)
 
             return confusionMatrix
-
-
-        def test_step_for_cqa(s1_all, s2_all, y_all, tag):
-            """
-            Evaluates model on a dev/test set
-            """
-            golds = []
-            preds = []
-            softmax_scores = []
-
-            n = len(s1_all)
-            batch_size = FLAGS.batch_size
-            start_index = 0
-            while start_index < n:
-                if start_index + batch_size <= n:
-                    s1_batch = s1_all[start_index: start_index + batch_size]
-                    s2_batch = s2_all[start_index: start_index + batch_size]
-                    y_batch = y_all[start_index: start_index + batch_size]
-
-                    feed_dict = {
-                        model.input_s1: s1_batch,
-                        model.input_s2: s2_batch,
-                        model.input_y: y_batch,
-                        model.dropout_keep_prob: 1.0
-                    }
-
-                    step, loss, accuracy, curr_softmax_scores, curr_predictions, curr_golds = sess.run(
-                        [global_step, model.loss, model.accuracy, model.softmax_scores,
-                         model.predictions, model.golds], feed_dict)
-
-                    golds += list(curr_golds)
-                    preds += list(curr_predictions)
-                    softmax_scores += list(curr_softmax_scores)
-
-                else:
-                    left_num = n - start_index
-                    # 填充一下
-                    s1_batch = np.concatenate((s1_all[start_index:], s1_all[:batch_size - left_num]), axis=0)
-                    s2_batch = np.concatenate((s2_all[start_index:], s2_all[:batch_size - left_num]), axis=0)
-                    y_batch = np.concatenate((y_all[start_index:], y_all[:batch_size - left_num]), axis=0)
-
-                    feed_dict = {
-                        model.input_s1: s1_batch,
-                        model.input_s2: s2_batch,
-                        model.input_y: y_batch,
-                        model.dropout_keep_prob: 1.0
-                    }
-                    step, loss, accuracy, curr_softmax_scores, curr_predictions, curr_golds = sess.run(
-                        [global_step, model.loss, model.accuracy, model.softmax_scores,
-                         model.predictions, model.golds], feed_dict)
-
-                    golds += list(curr_golds[:left_num])
-                    preds += list(curr_predictions[:left_num])
-                    softmax_scores += list(curr_softmax_scores[:left_num])
-
-                    break
-
-                start_index += batch_size
-
-            alphabet = Alphabet()
-            for i in range(num_classes):
-                alphabet.add(str(i))
-            confusionMatrix = ConfusionMatrix(alphabet)
-            predictions = list(map(str, preds))
-            golds = list(map(str, golds))
-            confusionMatrix.add_list(predictions, golds)
-
-
-
-            id_file = ""
-            if tag == "dev":
-                id_file = train_data_dir + "/dev/id"
-            if tag == "test":
-                id_file = train_data_dir + "/test/id"
-
-            subtask = ""
-            if train_data_dir.split("/")[-1] == "QA":
-                subtask = "A"
-            if train_data_dir.split("/")[-1] == "QQ":
-                subtask = "B"
-
-            pred_file = train_data_dir + "/result.%s.txt" % (timestamp)
-            with open(pred_file, "w") as fw:
-                for i, s in enumerate(softmax_scores):
-                    fw.write("%d\t%.4f\n" % (preds[i], s[num_classes - 1]))
-
-            print(pred_file, id_file, tag, subtask)
-            map_score, mrr_score = get_rank_score_by_file(pred_file, id_file, tag, subtask)
-
-            return map_score, mrr_score, confusionMatrix.get_accuracy()
-
-
-
-        def _binary_early_stop(best_score, best_output_string):
-
-            confusionMatrix = test_step(test_arg1s, test_arg2s, test_labels)
-            p, r, dev_f1 = confusionMatrix.get_prf("1")
-
-            # current performance
-            curr_output_string = confusionMatrix.get_matrix() + "\n" + confusionMatrix.get_summary()
-
-            flag = 0
-            if dev_f1 >= best_score:
-                flag = 1
-                best_score = dev_f1
-
-                best_output_string = confusionMatrix.get_matrix() + "\n" + confusionMatrix.get_summary()
-
-                # print("")
-                # print("\nEvaluation on Test:")
-                # confusionMatrix = test_step(test_arg1s, test_arg2s, test_labels)
-                # confusionMatrix.print_out()
-                # print("")
-
-                acc = confusionMatrix.get_accuracy()
-                p, r, f1 = confusionMatrix.get_prf("1")
-
-                evaluation_result["acc"] = "%.4f" % acc
-                evaluation_result["f1"] = "%.4f" % f1
-                evaluation_result["p"] = "%.4f" % p
-                evaluation_result["r"] = "%.4f" % r
-
-            color = colored.bg('black') + colored.fg('green')
-            reset = colored.attr('reset')
-
-            print("")
-            print("\nEvaluation on Test:")
-            print("Current Performance:")
-            print(curr_output_string)
-            if flag == 1:
-                print("  " * 40 + '❤️')
-            print((color + 'Best Performance' + reset))
-            print((color + best_output_string + reset))
-            print("")
-
-            return best_score, best_output_string
 
 
         def _four_way_early_stop(best_score, best_output_string):
@@ -565,48 +423,9 @@ with tf.Graph().as_default():
             return best_score, best_output_string
 
 
-        def _cqa_early_stop(best_score, best_output_string):
-
-            map_score, mrr_score, acc = test_step_for_cqa(test_arg1s, test_arg2s, test_labels, tag="test")
-            curr_output_string = "==> MAP: %f" % map_score
-
-            flag = 0
-            if map_score >= best_score:
-                flag = 1
-                best_score = map_score
-
-                best_output_string = "==> MAP: %f" % best_score
-
-                # print("")
-                # print("\nEvaluation on Test:")
-                # confusionMatrix = test_step(test_arg1s, test_arg2s, test_labels)
-                # confusionMatrix.print_out()
-                # print("")
-
-                evaluation_result["acc"] = "%.4f" % acc
-                evaluation_result["f1"] = "%.4f" % map_score
-                # evaluation_result["p"] = "%.4f" % p
-                # evaluation_result["r"] = "%.4f" % r
-
-            color = colored.bg('black') + colored.fg('green')
-            reset = colored.attr('reset')
-
-            print("")
-            print("\nEvaluation on Test:")
-            print("Current Performance:")
-            print(curr_output_string)
-            if flag == 1:
-                print("  " * 40 + '❤️')
-            print((color + 'Best Performance' + reset))
-            print((color + best_output_string + reset))
-            print("")
-
-            return best_score, best_output_string
-
-
         # Generate batches
         batches = data_helpers.batch_iter(
-            list(zip(train_arg1s, train_arg2s, train_labels)), FLAGS.batch_size, FLAGS.num_epochs)
+            list(zip(train_arg1s, train_arg2s, train_labels)), FLAGS.batch_size, FLAGS.num_epochs, shuffle=False)
 
         best_score = 0.0
         best_output_string = ""
@@ -616,12 +435,6 @@ with tf.Graph().as_default():
             train_step(s1_batch, s2_batch, y_batch)
             current_step = tf.train.global_step(sess, global_step)
             if current_step % FLAGS.evaluate_every == 0:
-
-                if num_classes == 3:
-                    # cqa
-                    best_score, best_output_string = _cqa_early_stop(best_score, best_output_string)
-                if num_classes == 2:
-                    best_score, best_output_string = _binary_early_stop(best_score, best_output_string)
                 if num_classes == 4:
                     best_score, best_output_string = _four_way_early_stop(best_score, best_output_string)
                 if num_classes in [10, 15]:

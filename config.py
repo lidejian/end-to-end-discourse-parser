@@ -12,7 +12,7 @@ if hostname == "precision": #linux 服务器
 else:   # windows
     CWD = "D:/PY/Pycode/project/end-to-end-discourse-parser"
     GOOGLE_WORD2VEC_PATH = "D:/data/word2vec/GoogleNews/GoogleNews-vectors-negative300.bin"
-    # BLLIP_WORD2VEC_PATH = "/home/dejian/data/BLLIP_parsed/bllip.vectors.bin"
+    BLLIP_WORD2VEC_PATH = "D:/data/BLLIP_parsed/bllip.vectors.bin"
     ZH_WORD2VEC_PATH = "D:/data/word2vec/zh-Gigaword-300.txt"
 
 DATA_PATH = CWD + "/data"

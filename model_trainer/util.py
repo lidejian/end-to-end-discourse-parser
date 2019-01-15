@@ -29,15 +29,13 @@ def load_google_word2vec_for_vocab(train_dir, dict_word_to_index, from_origin=Tr
 
     embedding_file = train_dir + "/vocab.google_word_embedding"
     if from_origin:
-        _load_vocab_vec(config.GOOGLE_WORD2VEC_PATH, dict_word_to_index, embedding_file)
-        # _load_vocab_vec(config.BLLIP_WORD2VEC_PATH, dict_word_to_index, embedding_file)
+        # _load_vocab_vec(config.GOOGLE_WORD2VEC_PATH, dict_word_to_index, embedding_file)
+        _load_vocab_vec(config.BLLIP_WORD2VEC_PATH, dict_word_to_index, embedding_file)
         # _load_vec_from_corpus(config.DATA_PATH + "/cqa/qatar_corpus_100.wordvec", dict_word_to_index, embedding_file, 100)
         # _load_vec_from_corpus(config.ZH_WORD2VEC_PATH, dict_word_to_index, embedding_file, 300)
 
     # load embedding matrix
     return _load_wordvec(embedding_file)
-
-
 
 
 
