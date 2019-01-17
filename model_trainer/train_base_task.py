@@ -102,9 +102,9 @@ print("==> record path: %s" % record_file)
 print()
 
 evaluation_result = {
-    "loss": 0.0,
-    # "p": 0.0,
-    # "r": 0.0,
+    "f1": 0.0,
+    "p": 0.0,
+    "r": 0.0,
     "acc": 0.0
 }
 configuration = {
@@ -241,6 +241,13 @@ with tf.Graph().as_default():
         grads_and_vars = optimizer.compute_gradients(model.loss)
         train_op = optimizer.apply_gradients(grads_and_vars, global_step=global_step)
 
+
+        # write to logs
+        merged = tf.summary.merge_all()
+        writer = tf.summary.FileWriter("logs/", sess.graph)
+        # tensorboard - -logdir = logs
+
+
         # Initialize all variables
         sess.run(tf.global_variables_initializer())
 
@@ -288,10 +295,11 @@ with tf.Graph().as_default():
                 [global_step, model.loss, model.accuracy, model.softmax_scores,
                  model.predictions, model.golds], feed_dict)
 
-            print('\t %s loss:' % test_str, loss)
+            # print('\t %s loss:' % test_str, loss)
 
             golds += list(curr_golds)  # 真实label:[2,1,2,2。。。]
             predictions += list(curr_predictions)
+
 
             alphabet = Alphabet()
             for i in range(num_classes):
@@ -311,17 +319,17 @@ with tf.Graph().as_default():
 
             acc = confusionMatrix.get_accuracy()
             # 对着 f1 调
-            # p, r, f1 = confusionMatrix.get_average_prf()
+            p, r, f1 = confusionMatrix.get_average_prf()
 
             # current performance
-            curr_output_string = confusionMatrix.get_matrix() + confusionMatrix.get_summary2()
+            curr_output_string = confusionMatrix.get_matrix() + confusionMatrix.get_summary()
 
             flag = 0
-            if acc >= best_score:
+            if f1 >= best_score:
                 flag = 1
-                best_score = acc
+                best_score = f1
 
-                best_output_string = confusionMatrix.get_matrix() + confusionMatrix.get_summary2()
+                best_output_string = confusionMatrix.get_matrix() + confusionMatrix.get_summary()
 
                 # print("")
                 # print("\nEvaluation on Test:")
@@ -333,9 +341,9 @@ with tf.Graph().as_default():
                 p, r, f1 = confusionMatrix.get_average_prf()
 
                 evaluation_result["acc"] = "%.4f" % acc
-                evaluation_result["loss"] = "%.4f" % confusionMatrix.loss
-                # evaluation_result["p"] = "%.4f" % p
-                # evaluation_result["r"] = "%.4f" % r
+                evaluation_result["f1"] = "%.4f" % f1
+                evaluation_result["p"] = "%.4f" % p
+                evaluation_result["r"] = "%.4f" % r
 
             # color = colored.bg('black') + colored.fg('green')
             # reset = colored.attr('reset')
@@ -358,12 +366,10 @@ with tf.Graph().as_default():
         def _prediction_on_test():
             confusionMatrix = test_step(test_arg1s, test_arg2s, test_labels, test_str='test') #得到4*4的矩阵
             acc = confusionMatrix.get_accuracy()
-            curr_output_string = confusionMatrix.get_matrix() + confusionMatrix.get_summary2()
+            curr_output_string = confusionMatrix.get_matrix() + confusionMatrix.get_summary()
             print("\nEvaluation on Dev:")
             print("Current Performance:")
             print('\033[33m',curr_output_string, '\033[0m') #当前结果黄色（33）显示
-            print('\033[33m Best Performance\033[0m') #最佳结果黄色（33）显示
-
 
 
         # Generate batches
@@ -385,12 +391,11 @@ with tf.Graph().as_default():
 
 
 # record the configuration and result
-fieldnames = ["loss", "acc", "train_data_dir", "model", "share_rep_weights",
+fieldnames = ["f1", "p", "r", "acc", "train_data_dir", "model", "share_rep_weights",
                    "bidirectional", "cell_type",  "hidden_size", "num_layers",
                   "dropout_keep_prob", "l2_reg_lambda", "Optimizer", "learning_rate", "batch_size", "num_epochs", "w2v_type",
                   "additional_conf"
 ]
 do_record(fieldnames, configuration, additional_conf, evaluation_result, record_file)
-
 
 
