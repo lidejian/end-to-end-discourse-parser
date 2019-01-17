@@ -323,6 +323,7 @@ with tf.Graph().as_default():
 
             # current performance
             curr_output_string = confusionMatrix.get_matrix() + confusionMatrix.get_summary()
+                                 # + confusionMatrix.get_micro_f1()
 
             flag = 0
             if f1 >= best_score:
@@ -330,6 +331,7 @@ with tf.Graph().as_default():
                 best_score = f1
 
                 best_output_string = confusionMatrix.get_matrix() + confusionMatrix.get_summary()
+                                 # + confusionMatrix.get_micro_f1()
 
                 # print("")
                 # print("\nEvaluation on Test:")
