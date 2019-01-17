@@ -1,7 +1,7 @@
 # end-to-end-discourse-parser
 ### 环境
 python 3.6.1  
-tensorflow 1.2.0
+tensorflow 1.12.0-rc1
 
 ### 目录结构
 └─data  
