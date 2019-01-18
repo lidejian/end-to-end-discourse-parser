@@ -29,7 +29,13 @@ import os
 
 
 # ''' four way'''
-train_data_dir = config.DATA_PATH + "/four_way/PDTB_imp"
+# train_data_dir = config.DATA_PATH + "/four_way/PDTB_imp"
+
+
+# ''' sentense four eng'''
+# train_data_dir = config.DATA_PATH + "/gen_my_four_sen/exp"
+train_data_dir = config.DATA_PATH + "/gen_my_four_sen/imp"
+
 
 #
 # train_data_dir = config.DATA_PATH + "/cqa/QA"

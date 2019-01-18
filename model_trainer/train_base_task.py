@@ -186,7 +186,7 @@ test_arg2s = np.array(list(vocab_processor.transform(test_arg2s)))
 
 # load word embedding matrix 词向量:(n,m)n为所有文本单词个数，即下面的Vocabulary Size，m为词向量维度，google_news中为300。
 vocab_embeddings = \
-    util.load_google_word2vec_for_vocab(train_data_dir, vocab_processor.vocabulary_._mapping, from_origin=False)
+    util.load_google_word2vec_for_vocab(train_data_dir, vocab_processor.vocabulary_._mapping, from_origin=True)
 
 
 
@@ -251,6 +251,9 @@ with tf.Graph().as_default():
         # Initialize all variables
         sess.run(tf.global_variables_initializer())
 
+        # save model
+        saver = tf.train.Saver(max_to_keep=1)
+
         def train_step(s1_batch, s2_batch, y_batch):
             """
             A single training step
@@ -274,7 +277,8 @@ with tf.Graph().as_default():
 
 
             time_str = datetime.datetime.now().isoformat()
-            print(("\r {}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, accuracy)), end='')
+            print(("\r {}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, accuracy)),end='')
+
 
         def test_step(s1_all, s2_all, y_all, test_str):
             """
@@ -347,6 +351,9 @@ with tf.Graph().as_default():
                 evaluation_result["p"] = "%.4f" % p
                 evaluation_result["r"] = "%.4f" % r
 
+                # save model
+                saver.save(sess, 'ckpt/best.ckpt')
+
             # color = colored.bg('black') + colored.fg('green')
             # reset = colored.attr('reset')
 
@@ -366,7 +373,11 @@ with tf.Graph().as_default():
 
 
         def _prediction_on_test():
-            confusionMatrix = test_step(test_arg1s, test_arg2s, test_labels, test_str='test') #得到4*4的矩阵
+            # 恢复模型
+            model_file = tf.train.latest_checkpoint('ckpt/')
+            saver.restore(sess, model_file)
+
+            confusionMatrix = test_step(dev_arg1s, dev_arg2s, dev_labels, test_str='dev') #得到4*4的矩阵
             acc = confusionMatrix.get_accuracy()
             curr_output_string = confusionMatrix.get_matrix() + confusionMatrix.get_summary()
             print("\nEvaluation on Dev:")
@@ -374,9 +385,18 @@ with tf.Graph().as_default():
             print('\033[33m',curr_output_string, '\033[0m') #当前结果黄色（33）显示
 
 
+
+            confusionMatrix = test_step(test_arg1s, test_arg2s, test_labels, test_str='test') #得到4*4的矩阵
+            acc = confusionMatrix.get_accuracy()
+            curr_output_string = confusionMatrix.get_matrix() + confusionMatrix.get_summary()
+            print("\nEvaluation on test:")
+            print("Current Performance:")
+            print('\033[33m',curr_output_string, '\033[0m') #当前结果黄色（33）显示
+
+
         # Generate batches
         batches = data_helpers.batch_iter(
-            list(zip(train_arg1s, train_arg2s, train_labels)), FLAGS.batch_size, FLAGS.num_epochs, shuffle=False)
+            list(zip(train_arg1s, train_arg2s, train_labels)), FLAGS.batch_size, FLAGS.num_epochs, shuffle=True)
 
         best_score = 0.0
         best_output_string = ""

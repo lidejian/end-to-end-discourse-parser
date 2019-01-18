@@ -32,8 +32,8 @@ def clean_str(string):
 def load_data_and_labels(dir):
 
     with \
-        codecs.open("%s/arg1.tok" % dir, encoding="utf-8") as fin_arg1, \
-        codecs.open("%s/arg2.tok" % dir, encoding="utf-8") as fin_arg2, \
+        codecs.open("%s/arg1" % dir, encoding="utf-8") as fin_arg1, \
+        codecs.open("%s/arg2" % dir, encoding="utf-8") as fin_arg2, \
         codecs.open("%s/label" % dir, encoding="utf-8") as fin_label:
 
         arg1s = [clean_str(line.strip()) for line in fin_arg1]
