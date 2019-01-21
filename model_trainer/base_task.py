@@ -12,20 +12,25 @@ import numpy as np
 def _get_rnn_cell(cell_type, hidden_size, num_layers, dropout_keep_prob):
     cell = None
     if cell_type == "BasicLSTM":
-        cell = tf.nn.rnn_cell.BasicLSTMCell(hidden_size, forget_bias=1.0)
+        # cell = tf.nn.rnn_cell.BasicLSTMCell(hidden_size, forget_bias=1.0)
+        cell = tf.contrib.rnn.BasicLSTMCell(hidden_size, forget_bias=1.0)
     if cell_type == "LSTM":
-        cell = tf.nn.rnn_cell.LSTMCell(hidden_size, forget_bias=1.0)
+        # cell = tf.nn.rnn_cell.LSTMCell(hidden_size, forget_bias=1.0)
+        cell = tf.contrib.rnn.LSTMCell(hidden_size, forget_bias=1.0)
     if cell_type == "GRU":
-        cell = tf.nn.rnn_cell.GRUCell(hidden_size)
+        # cell = tf.nn.rnn_cell.GRUCell(hidden_size)
+        cell = tf.contrib.rnn.GRUCell(hidden_size)
 
     if cell is None:
         raise ValueError("cell type: %s is incorrect!!" % (cell_type))
 
     # dropout
-    cell = tf.nn.rnn_cell.DropoutWrapper(cell, output_keep_prob=dropout_keep_prob)
+    # cell = tf.nn.rnn_cell.DropoutWrapper(cell, output_keep_prob=dropout_keep_prob)
+    cell = tf.contrib.rnn.DropoutWrapper(cell, output_keep_prob=dropout_keep_prob)
     # multi-layer
     if num_layers > 1:
-        cell = tf.nn.rnn_cell.MultiRNNCell([cell] * num_layers)
+        # cell = tf.nn.rnn_cell.MultiRNNCell([cell] * num_layers)
+        cell = tf.contrib.rnn.MultiRNNCell([cell] * num_layers)
     return cell
 
 
