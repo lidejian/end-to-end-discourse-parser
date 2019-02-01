@@ -150,13 +150,6 @@ test_arg1s, test_arg2s, test_labels = data_helpers.load_data_and_labels("%s/test
 num_classes = train_labels.shape[1]
 
 
-
-
-
-
-
-
-
 print("num_classes", num_classes)
 
 # Build vocabulary
@@ -215,6 +208,7 @@ with tf.Graph().as_default():
                 w2v_length=train_arg1s.shape[1],
                 vocab_embeddings=vocab_embeddings,
                 num_classes=train_labels.shape[1],
+
                 filter_sizes=[4, 6, 13],
                 num_filters=100,
             )

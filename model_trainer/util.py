@@ -164,3 +164,5 @@ def _load_vec_from_corpus(fname, vocab, to_file, embedding_size=300):
             fw.write(" ".join([str(v) for v in vec]) + "\n")
 
     return np.array(vocab_embeddings)
+
+
