@@ -25,6 +25,7 @@ import time
 from pycorenlp import StanfordCoreNLP
 import re
 from tree_util import ConstTree, DepTree, ConstNode, DepNode
+from vocab import Vocab
 
 PAD_WORD = '<blank>'
 UNK_WORD = '<unk>'
@@ -36,6 +37,11 @@ PUNC_TAG = '<punc>'
 
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
+
+# cd D:\stanford-corenlp-full-2016-10-31
+# java -mx4g -cp "*" edu.stanford.nlp.pipeline.StanfordCoreNLPServer -port 9000 -timeout 15000
+
+
 
 # from sys import version_infovim
 # print(tf.__version__)
@@ -243,10 +249,54 @@ def data2Inst(arg1s, arg2s, label):
         data_set.append(inst)
     return data_set
 
+# {list}, every element is a {PDTBInstance}
+# train_set = data2Inst(train_arg1s, train_arg2s, train_labels)
+dev_set = data2Inst(dev_arg1s, dev_arg2s, dev_labels)################# test
+# test_set = data2Inst(test_arg1s, test_arg2s, test_labels)
 
-dev_set = data2Inst(dev_arg1s, dev_arg2s, dev_labels)
-print(dev_set)
-print('hhh')
+# PDTBDataSet function, get all words in dataset
+def get_all_words(dataset):
+    words = []
+    for inst in dataset:
+        words.extend(inst.left_words)
+        words.extend(inst.right_words)
+    return words
+
+def get_all_tags(dataset):
+    tags = []
+    for inst in dataset:
+        tags.extend([node.tag for node in inst.left_const_tree.bfs_tranverse()])
+        tags.extend([node.tag for node in inst.right_const_tree.bfs_tranverse()])
+    return tags
+
+
+### load embedding ###
+word_vocab = Vocab(mannual_add=[PAD_WORD, UNK_WORD, BOS_WORD, EOS_WORD, NUM_WORD])
+# for word in get_all_words(train_set)+get_all_words(dev_set)+get_all_words(test_set):
+for word in get_all_words(dev_set): ################# test
+    word_vocab.add(word)
+
+# word_vocab.load_pretrained_emb(PathConfig.embedding_path)
+embedding_path='D:\\data\\glove.6B\\glove.6B.50d.txt'
+word_vocab.load_pretrained_emb(embedding_path)  # save as 'word_vocab.obj'
+
+
+# load tag embedding
+tag_vocab = Vocab()
+# for tag in get_all_tags(train_set)+get_all_tags(dev_set)+get_all_tags(test_set):################# test
+for tag in get_all_tags(dev_set):
+    tag_vocab.add(tag)
+print('Size of tag vocab: {}'.format(tag_vocab.size()))
+# tag_vocab.init_embed(ModelConfig.tag_embed_dim)
+tag_embed_dim = 50
+tag_vocab.init_embed(tag_embed_dim) # save as 'tag_vocab.obj'
+# torch.save(tag_vocab, os.path.join(PathConfig.experiment_data_dir, 'tag_vocab.obj'))
+
+# dev_set.format_instances_to_torch_var(word_vocab, tag_vocab) 将树节点的单词、tag等换为torch的数字 save as dataset
+
+print('mmm')
+print('fff')
+### load embedding end  ###
 
 
 # # Build vocabulary
