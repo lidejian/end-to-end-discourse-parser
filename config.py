@@ -4,7 +4,7 @@ import socket
 
 hostname = socket.gethostname()
 
-if hostname == "precision": #linux 服务器
+if hostname == "Precision-Tower-5810": #linux 服务器
     CWD = "/home/dejian/end-to-end-discourse-parser"
     GOOGLE_WORD2VEC_PATH = "/home/dejian/data/word2vec/GoogleNews/GoogleNews-vectors-negative300.bin"
     BLLIP_WORD2VEC_PATH = "/home/dejian/data/BLLIP_parsed/bllip.vectors.bin"
@@ -14,6 +14,8 @@ else:   # windows
     GOOGLE_WORD2VEC_PATH = "D:/data/word2vec/GoogleNews/GoogleNews-vectors-negative300.bin"
     BLLIP_WORD2VEC_PATH = "D:/data/BLLIP_parsed/bllip.vectors.bin"
     ZH_WORD2VEC_PATH = "D:/data/word2vec/zh-Gigaword-300.txt"
+    GLOVE_PATH="D:/data/glove.840B.300d/glove.840B.300d.txt"
+
 
 DATA_PATH = CWD + "/data"
 RECORD_PATH = CWD + "/record"

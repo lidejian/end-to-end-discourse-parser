@@ -18,7 +18,7 @@ import data_helpers
 import util
 import tensorflow as tf
 import numpy as np
-from scorer import get_rank_score_by_file
+# from scorer import get_rank_score_by_file
 import time
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
@@ -33,6 +33,10 @@ timestamp = time.time()
 # tf.flags.DEFINE_string("dataset_type", "PDTB_imp", "dataset_type (default: PDTB_imp)")
 tf.flags.DEFINE_string("train_data_dir", "", "train data dir")
 tf.flags.DEFINE_boolean("blind", False, "blind(default: 'False')")
+
+
+# embedding
+tf.flags.DEFINE_string("embedding", "Glove", "embedding(default:'Glove')")
 
 # models
 tf.flags.DEFINE_string("model", "RNN", "model(default: 'RNN')")
@@ -179,7 +183,7 @@ test_arg2s = np.array(list(vocab_processor.transform(test_arg2s)))
 
 # load word embedding matrix 词向量:(n,m)n为所有文本单词个数，即下面的Vocabulary Size，m为词向量维度，google_news中为300。
 vocab_embeddings = \
-    util.load_google_word2vec_for_vocab(train_data_dir, vocab_processor.vocabulary_._mapping, from_origin=True)
+    util.load_embedding(train_data_dir, vocab_processor.vocabulary_._mapping, FLAGS.embedding, from_origin=False)
 
 
 

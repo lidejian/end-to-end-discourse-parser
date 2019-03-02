@@ -8,9 +8,100 @@ from . import util
 import tensorflow as tf
 import numpy as np
 
+# class BinaryTreeLSTMCell(tf.contrib.rnn.BasicLSTMCell):
+#
+#     def __init__(self, num_units, forget_bias=1.0, activation=tf.tanh,
+#                  keep_prob=1.0, seed=None):
+#         """Initialize the cell.
+#     Args:
+#       num_units: int, The number of units in the LSTM cell.
+#       forget_bias: float, The bias added to forget gates (see above).
+#       activation: Activation function of the inner states.
+#       keep_prob: Keep probability for recurrent dropout.
+#       seed: Random seed for dropout.
+#     """
+#         super(BinaryTreeLSTMCell, self).__init__(
+#             num_units, forget_bias=forget_bias, activation=activation)
+#         self._keep_prob = keep_prob
+#         self._seed = seed
+#
+#     def __call__(self, inputs, state, scope=None):
+#         with tf.variable_scope(scope or type(self).__name__):
+#             # ci, hi
+#             num_children = len(state)
+#             concat = tf.contrib.layers.linear(
+#                 tf.concat([inputs, sum([ch[1] for ch in state])], 1), 3 * self._num_units)
+#
+#             # i = input_gate, j = new_input, f = forget_gate, o = output_gate
+#             i, j, o = tf.split(value=concat, num_or_size_splits=3, axis=1)
+#
+#             concat_f = tf.contrib.layers.linear(
+#                 tf.concat([inputs] + [ch[1] for ch in state], 1), num_children * self._num_units)
+#
+#             f = tf.split(value=concat_f, num_or_size_splits=num_children, axis=1)
+#
+#             j = self._activation(j)
+#             if not isinstance(self._keep_prob, float) or self._keep_prob < 1:
+#                 j = tf.nn.dropout(j, self._keep_prob, seed=self._seed)
+#
+#             new_c = tf.sigmoid(i) * j
+#             for idx, (ci, hi) in state:
+#                 new_c += ci * tf.sigmoid(f[idx] + self._forget_bias)
+#
+#             new_h = self._activation(new_c) * tf.sigmoid(o)
+#
+#             new_state = tf.contrib.rnn.LSTMStateTuple(new_c, new_h)
+#
+#             return new_h, new_state
+
+class BinaryTreeLSTMCell(tf.contrib.rnn.BasicLSTMCell):
+    """LSTM with two state inputs.
+
+    This is the model described in section 3.2 of 'Improved Semantic
+    Representations From Tree-Structured Long Short-Term Memory
+    Networks' <http://arxiv.org/pdf/1503.00075.pdf>, with recurrent
+    dropout as described in 'Recurrent Dropout without Memory Loss'
+    <http://arxiv.org/pdf/1603.05118.pdf>.
+    """
+
+    def __init__(self, num_units, keep_prob=1.0):
+        """Initialize the cell.
+
+        Args:
+          num_units: int, The number of units in the LSTM cell.
+          keep_prob: Keep probability for recurrent dropout.
+        """
+        super(BinaryTreeLSTMCell, self).__init__(num_units)
+        self._keep_prob = keep_prob
+
+    def __call__(self, inputs, state, scope=None):
+        with tf.variable_scope(scope or type(self).__name__):
+            lhs, rhs = state
+            c0, h0 = lhs
+            c1, h1 = rhs
+            concat = tf.contrib.layers.linear(
+                tf.concat([inputs, h0, h1], 1), 5 * self._num_units)
+
+            # i = input_gate, j = new_input, f = forget_gate, o = output_gate
+            i, j, f0, f1, o = tf.split(value=concat, num_or_size_splits=5, axis=1)
+
+            j = self._activation(j)
+            if not isinstance(self._keep_prob, float) or self._keep_prob < 1:
+                j = tf.nn.dropout(j, self._keep_prob)
+
+            new_c = (c0 * tf.sigmoid(f0 + self._forget_bias) +
+                     c1 * tf.sigmoid(f1 + self._forget_bias) +
+                     tf.sigmoid(i) * j)
+            new_h = self._activation(new_c) * tf.sigmoid(o)
+
+            new_state = tf.contrib.rnn.LSTMStateTuple(new_c, new_h)
+
+            return new_h, new_state
 
 def _get_rnn_cell(cell_type, hidden_size, num_layers, dropout_keep_prob):
     cell = None
+    if cell_type == "TreeLSTM":
+        cell = BinaryTreeLSTMCell(hidden_size, keep_prob=1.0)
     if cell_type == "BasicLSTM":
         # cell = tf.nn.rnn_cell.BasicLSTMCell(hidden_size, forget_bias=1.0)
         cell = tf.contrib.rnn.BasicLSTMCell(hidden_size, forget_bias=1.0)
@@ -295,13 +386,13 @@ class Attention_RNN1(object):
             # Attention Pooling Network
             atten_left = tf.reshape(tf.matmul(tf.reshape(outputs1, [-1, hidden_size]), W),
                                     [batch_size, sent_length, hidden_size])
-            atten_right = tf.nn.tanh(tf.batch_matmul(atten_left, tf.transpose(outputs2, perm=[0,2,1])))
+            atten_right = tf.nn.tanh(tf.matmul(atten_left, tf.transpose(outputs2, perm=[0,2,1])))
 
             max_pooled_s1 = tf.nn.softmax(tf.reduce_max(atten_right, reduction_indices=[2]))
             max_pooled_s2 = tf.nn.softmax(tf.reduce_max(atten_right, reduction_indices=[1]))
 
-            attention_s1 = tf.batch_matmul(tf.transpose(outputs1,perm=[0,2,1]), tf.reshape(max_pooled_s1, [batch_size, sent_length, 1]))
-            attention_s2 = tf.batch_matmul(tf.transpose(outputs2,perm=[0,2,1]), tf.reshape(max_pooled_s2, [batch_size, sent_length, 1]))
+            attention_s1 = tf.matmul(tf.transpose(outputs1,perm=[0,2,1]), tf.reshape(max_pooled_s1, [batch_size, sent_length, 1]))
+            attention_s2 = tf.matmul(tf.transpose(outputs2,perm=[0,2,1]), tf.reshape(max_pooled_s2, [batch_size, sent_length, 1]))
 
         # self.output = tf.reshape(tf.concat(1, [attention_s1, attention_s2]), [batch_size, 2 * hidden_size])
         self.output = tf.reshape(tf.concat([attention_s1, attention_s2],1), [batch_size, 2 * hidden_size])# 1.0及以后版本：tensors在前，数字在后
@@ -311,7 +402,7 @@ class Attention_RNN1(object):
             self.h_drop = tf.nn.dropout(self.output, self.dropout_keep_prob)
 
         # Final (unnormalized) scores and predictions
-        with tf.name_scope("output"):
+        with tf.name_scope("softmax"):
             W = tf.get_variable(
                 "W",
                 shape=[2 * hidden_size, num_classes],

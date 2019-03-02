@@ -37,8 +37,6 @@ import os
 train_data_dir = config.DATA_PATH + "/gen_my_four_sen/imp"
 
 
-#
-# train_data_dir = config.DATA_PATH + "/cqa/QA"
 
 # # # CoNLL
 # train_data_dir = config.DATA_PATH + "/conll/conll_imp"
@@ -56,9 +54,11 @@ model = "RNN"
 # model = "Attention_RNN3"
 # model = "Attention_RNN4"
 # model = "Attention_RNN5"
-share_rep_weights = True
-bidirectional = True
+share_rep_weights = False
+bidirectional = False
+embedding = "Glove" # Glove or google_word_2_vec
 cell_type = "BasicLSTM"
+# cell_type = "TreeLSTM"
 hidden_size = 50
 num_layers = 1
 dropout_keep_prob = 0.5
@@ -68,8 +68,7 @@ batch_size = 64
 num_epochs = 20
 evaluate_every = 10
 
-
-cmd = "python train_tree_task.py" \
+cmd = "python train_base_task.py" \
       + " --train_data_dir %s" % train_data_dir \
       + " --model %s" % model \
       + " --share_rep_weights %s" % share_rep_weights \
@@ -83,6 +82,7 @@ cmd = "python train_tree_task.py" \
       + " --batch_size %s" % batch_size \
       + " --num_epochs %s" % num_epochs \
       + " --evaluate_every %s" % evaluate_every \
+      + " --embedding %s" % embedding\
 
 # + " --blind %s" % blind \
 # + " --dataset_type %s" % dataset_type \

@@ -23,9 +23,14 @@ def length(data):
 #     train_dir： 训练数据地址
 #     dict_word_to_index：训练数据的词
 #     from_origin：是否从原地址加载词向量
-def load_google_word2vec_for_vocab(train_dir, dict_word_to_index, from_origin=True):
+def load_embedding(train_dir, dict_word_to_index, Glove_flag, from_origin=True):
 
     # print "\n".join(dict_word_to_index.keys())
+    if Glove_flag == 'Glove':
+        embedding_file = train_dir + "/vocab.glove_word_embedding"
+        if from_origin:
+            _load_vocab_vec_from_glove(config.GLOVE_PATH, dict_word_to_index, embedding_file)
+        return _load_wordvec(embedding_file)
 
     embedding_file = train_dir + "/vocab.google_word_embedding"
     if from_origin:
@@ -82,6 +87,41 @@ def _load_vocab_vec(fname, dict_word_to_index, to_file):
         for i in range(len(dict_word_to_index)):
             fw.write(vocab_words[i] + " " + " ".join(map(str, vocab_embeddings[i])) + "\n")
 
+
+# dict_vocab: token -> index
+def _load_vocab_vec_from_glove(fname, dict_word_to_index, to_file):
+    """
+    Loads word vecs from Glove
+    """
+    dict_word_to_vector = {}
+
+    with open(fname, 'r', encoding='UTF-8') as f:
+        for line in f:
+            contents = line.strip().split(' ')
+            word = contents[0]
+            if word in dict_word_to_index:
+                dict_word_to_vector[word] = np.array(list(map(float, contents[1:])), dtype='float32')
+            else:
+                pass
+    layer1_size = dict_word_to_vector['the'].size
+    print("==> word embedding size", layer1_size)
+
+    vocab_words = []
+    vocab_embeddings = [np.array([0] * layer1_size)] * len(dict_word_to_index)
+    print(("The number of word in vec: %d" % len(dict_word_to_vector)))
+    for word in dict_word_to_index:
+        vocab_words.append(word)
+        index = dict_word_to_index[word]
+        if index == 0: # unk or padding --> 0
+            continue
+        if word in dict_word_to_vector:
+            vocab_embeddings[index] = dict_word_to_vector[word]
+        else:
+            vocab_embeddings[index] = np.random.uniform(-0.25, 0.25, layer1_size)
+
+    with open(to_file, "w") as fw:
+        for i in range(len(dict_word_to_index)):
+            fw.write(vocab_words[i] + " " + " ".join(map(str, vocab_embeddings[i])) + "\n")
 
 def _load_wordvec(filename):
     vocab_embeddings = []
