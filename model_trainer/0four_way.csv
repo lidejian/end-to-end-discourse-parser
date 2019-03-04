@@ -1,0 +1,7 @@
+f1,p,r,acc,train_data_dir,embedding,model,share_rep_weights,bidirectional,cell_type,hidden_size,num_layers,dropout_keep_prob,l2_reg_lambda,Optimizer,learning_rate,batch_size,num_epochs,w2v_type,additional_conf
+0.3709,0.4134,0.3623,0.5083,/home/dejian/end-to-end-discourse-parser/data/gen_my_four_sen/imp,Glove,CNN,TRUE,FALSE,BasicLSTM,50,1,0.5,0,AdaOptimizer,0.001,64,20,Glove_50?,{}
+0.3546,0.4092,0.3458,0.5194,/home/dejian/end-to-end-discourse-parser/data/gen_my_four_sen/imp,Glove,CNN,TRUE,FALSE,BasicLSTM,300,1,0.5,0,AdaOptimizer,0.001,64,20,Glove_50?,{}
+0.3322,0.4333,0.3312,0.5268,/home/dejian/end-to-end-discourse-parser/data/gen_my_four_sen/imp,Glove,RNN,TRUE,TRUE,BasicLSTM,50,1,0.5,0,AdaOptimizer,0.001,64,20,Glove_50?,{}
+0.3881,0.5047,0.3754,0.525,/home/dejian/end-to-end-discourse-parser/data/gen_my_four_sen/imp,Glove,RNN,TRUE,TRUE,BasicLSTM,300,1,0.5,0,AdaOptimizer,0.001,64,20,Glove_50?,{}
+0.3161,0.4725,0.3228,0.525,/home/dejian/end-to-end-discourse-parser/data/gen_my_four_sen/imp,Glove,RNN,TRUE,FALSE,BasicLSTM,50,1,0.5,0,AdaOptimizer,0.001,64,20,Glove_50?,{}
+0.3896,0.4333,0.3869,0.5102,/home/dejian/end-to-end-discourse-parser/data/gen_my_four_sen/imp,Glove,RNN,TRUE,FALSE,BasicLSTM,300,1,0.5,0,AdaOptimizer,0.001,64,20,Glove_50?,{}

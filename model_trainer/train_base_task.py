@@ -18,6 +18,7 @@ import data_helpers
 import util
 import tensorflow as tf
 import numpy as np
+import argparse
 # from scorer import get_rank_score_by_file
 import time
 import os
@@ -28,52 +29,54 @@ os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 # print(version_info)
 timestamp = time.time()
 
+
+FLAGS=tf.app.flags.FLAGS
 # Data set
 # tf.flags.DEFINE_string("level1_sense", "Comparison", "level1_sense (default: Comparison)")
 # tf.flags.DEFINE_string("dataset_type", "PDTB_imp", "dataset_type (default: PDTB_imp)")
-tf.flags.DEFINE_string("train_data_dir", "", "train data dir")
-tf.flags.DEFINE_boolean("blind", False, "blind(default: 'False')")
-
-
-# embedding
-tf.flags.DEFINE_string("embedding", "Glove", "embedding(default:'Glove')")
+tf.app.flags.DEFINE_string("train_data_dir", "", "train data dir")
 
 # models
-tf.flags.DEFINE_string("model", "RNN", "model(default: 'RNN')")
+tf.app.flags.DEFINE_string("model", "RNN", "model(default: 'RNN')")
 
 # Model Hyperparameters
 '''  RNN '''
-tf.flags.DEFINE_boolean("share_rep_weights", True, "share_rep_weights")
-tf.flags.DEFINE_boolean("bidirectional", True, "bidirectional")
+tf.app.flags.DEFINE_boolean("share_rep_weights", True, "share_rep_weights")
+tf.app.flags.DEFINE_boolean("bidirectional", False, "bidirectional")
 # cell
-tf.flags.DEFINE_string("cell_type", "BasicLSTM", "Cell Type(default: 'BasicLSTM')")
-tf.flags.DEFINE_integer("hidden_size", 100, "Number of Hidden Size (default: 100)")
-tf.flags.DEFINE_integer("num_layers", 1, "Number of RNN Layer (default: 1)")
+tf.app.flags.DEFINE_string("cell_type", "BasicLSTM", "Cell Type(default: 'BasicLSTM')")
+tf.app.flags.DEFINE_integer("hidden_size", 300, "Number of Hidden Size (default: 100)")
+tf.app.flags.DEFINE_integer("num_layers", 1, "Number of RNN Layer (default: 1)")
 
 # Training parameters
-tf.flags.DEFINE_float("dropout_keep_prob", 0.5, "Dropout keep probability (default: 0.5)")
-tf.flags.DEFINE_float("l2_reg_lambda", 0.0, "L2 regularizaion lambda (default: 0.0)")
-tf.flags.DEFINE_float("learning_rate", 0.005, "Learning Rate (default: 0.005)")
+tf.app.flags.DEFINE_float("dropout_keep_prob", 0.5, "Dropout keep probability (default: 0.5)")
+tf.app.flags.DEFINE_float("l2_reg_lambda", 0.0, "L2 regularizaion lambda (default: 0.0)")
+tf.app.flags.DEFINE_float("learning_rate", 0.005, "Learning Rate (default: 0.005)")
 
-tf.flags.DEFINE_integer("batch_size", 64, "Batch Size (default: 64)")
-tf.flags.DEFINE_integer("num_epochs", 15, "Number of training epochs (default: 10)")
+tf.app.flags.DEFINE_integer("batch_size", 64, "Batch Size (default: 64)")
+tf.app.flags.DEFINE_integer("num_epochs", 15, "Number of training epochs (default: 10)")
 
-tf.flags.DEFINE_integer("evaluate_every", 10, "Evaluate model on dev set after this many steps (default: 100)")
-tf.flags.DEFINE_integer("checkpoint_every", 100, "Save model after this many steps (default: 100)")
+tf.app.flags.DEFINE_integer("evaluate_every", 10, "Evaluate model on dev set after this many steps (default: 100)")
+tf.app.flags.DEFINE_integer("checkpoint_every", 100, "Save model after this many steps (default: 100)")
 
 # Misc Parameters
-tf.flags.DEFINE_boolean("allow_soft_placement", True, "Allow device soft device placement")
-tf.flags.DEFINE_boolean("log_device_placement", False, "Log placement of ops on devices")
+tf.app.flags.DEFINE_boolean("allow_soft_placement", True, "Allow device soft device placement")
+tf.app.flags.DEFINE_boolean("log_device_placement", False, "Log placement of ops on devices")
+
+# embedding
+tf.app.flags.DEFINE_string("embedding", "Glove", "embedding(default:'Glove')")
 
 
-FLAGS = tf.flags.FLAGS
-FLAGS._parse_flags()
+# FLAGS._parse_flags()
 # FLAGS.flag_values_dict()
+# FLAGS(sys.argv)
 print("\nParameters:")
-for attr, value in sorted(FLAGS.__flags.items()):
-    print(("{}={}".format(attr.upper(), value)))
+for attr, value in FLAGS.__flags.items():
+    print(("{}={}".format(attr, value.value)))
 print("")
-
+bidirectional=True
+print(bidirectional)
+print(FLAGS.hidden_size)
 
 
 model_mapping = {
@@ -89,18 +92,18 @@ model_mapping = {
 # for recording
 
 train_data_dir = FLAGS.train_data_dir
-if "conll" in train_data_dir:
-    if FLAGS.blind:
-        record_file = config.RECORD_PATH + "/base_task/conll_blind.csv"
-    else:
-        record_file = config.RECORD_PATH + "/base_task/conll.csv"
-elif "ZH" in train_data_dir:
-    if FLAGS.blind:
-        record_file = config.RECORD_PATH + "/base_task/zh_blind.csv"
-    else:
-        record_file = config.RECORD_PATH + "/base_task/zh.csv"
-else:
-    record_file = config.RECORD_PATH + "/base_task/four_way.csv"
+# if "conll" in train_data_dir:
+#     if FLAGS.blind:
+#         record_file = config.RECORD_PATH + "/base_task/conll_blind.csv"
+#     else:
+#         record_file = config.RECORD_PATH + "/base_task/conll.csv"
+# elif "ZH" in train_data_dir:
+#     if FLAGS.blind:
+#         record_file = config.RECORD_PATH + "/base_task/zh_blind.csv"
+#     else:
+#         record_file = config.RECORD_PATH + "/base_task/zh.csv"
+# else:
+record_file = config.RECORD_PATH + "/base_task/four_way.csv"
 
 print("==> record path: %s" % record_file)
 print()
@@ -113,9 +116,10 @@ evaluation_result = {
 }
 configuration = {
     "train_data_dir": FLAGS.train_data_dir,
+    "embedding": FLAGS.embedding,
     "model": FLAGS.model,
     "share_rep_weights": FLAGS.share_rep_weights,
-    "bidirectional": FLAGS.bidirectional,
+    "bidirectional": bidirectional,
 
     "cell_type": FLAGS.cell_type,
     "hidden_size": FLAGS.hidden_size,
@@ -225,7 +229,7 @@ with tf.Graph().as_default():
                 cell_type=FLAGS.cell_type,
                 hidden_size=FLAGS.hidden_size,
                 num_layers=FLAGS.num_layers,
-                bidirectional=FLAGS.bidirectional,
+                bidirectional=bidirectional,
                 share_rep_weights=FLAGS.share_rep_weights,
                 batch_size=FLAGS.batch_size,
                 l2_reg_lambda=FLAGS.l2_reg_lambda,
@@ -410,8 +414,9 @@ with tf.Graph().as_default():
         _prediction_on_test()
 
 
+
 # record the configuration and result
-fieldnames = ["f1", "p", "r", "acc", "train_data_dir", "model", "share_rep_weights",
+fieldnames = ["f1", "p", "r", "acc", "train_data_dir", "embedding", "model", "share_rep_weights",
                    "bidirectional", "cell_type",  "hidden_size", "num_layers",
                   "dropout_keep_prob", "l2_reg_lambda", "Optimizer", "learning_rate", "batch_size", "num_epochs", "w2v_type",
                   "additional_conf"

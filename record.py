@@ -77,7 +77,7 @@ def do_record(fieldnames, configuration, additional_conf, evaluation_result, rec
     # remove same rows
     rows = list(map(eval, set(map(str, rows))))
     # sort by dev score
-    rows = sorted(rows, key=lambda x: float(x["f1"]), reverse=True)
+    # rows = sorted(rows, key=lambda x: float(x["f1"]), reverse=True)
 
     write_dict_to_csv(fieldnames, rows, record_file)
 

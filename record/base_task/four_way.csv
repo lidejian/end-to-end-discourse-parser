@@ -1,2 +1,4 @@
-loss,acc,train_data_dir,model,share_rep_weights,bidirectional,cell_type,hidden_size,num_layers,dropout_keep_prob,l2_reg_lambda,Optimizer,learning_rate,batch_size,num_epochs,w2v_type,additional_conf
-1.0440,0.5364,/home/dejian/end-to-end-discourse-parser/data/four_way/PDTB_imp,Attention_RNN2,True,True,BasicLSTM,50,1,0.5,0.0,AdaOptimizer,0.001,64,20,cqa 100维,{}
+f1,p,r,acc,train_data_dir,model,share_rep_weights,bidirectional,cell_type,hidden_size,num_layers,dropout_keep_prob,l2_reg_lambda,Optimizer,learning_rate,batch_size,num_epochs,w2v_type,additional_conf
+0.4010,0.4982,0.3912,0.5508,/home/dejian/end-to-end-discourse-parser/data/gen_my_four_sen/imp,RNN,True,True,BasicLSTM,50,1,0.5,0.0,AdaOptimizer,0.001,64,20,cqa 100维,{}
+0.3934,0.4927,0.3848,0.5379,/home/dejian/end-to-end-discourse-parser/data/gen_my_four_sen/imp,RNN,True,True,BasicLSTM,50,1,0.5,0.0,AdaOptimizer,0.001,64,20,cqa 100维,{}
+0.3929,0.4484,0.3970,0.4880,/home/dejian/end-to-end-discourse-parser/data/gen_my_four_sen/imp,CNN,True,True,BasicLSTM,50,1,0.5,0.0,AdaOptimizer,0.001,64,20,cqa 100维,{}
