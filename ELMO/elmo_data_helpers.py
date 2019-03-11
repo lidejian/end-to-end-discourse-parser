@@ -5,7 +5,8 @@ import json
 
 import numpy as np
 import re, os
-
+from allennlp.commands.elmo import ElmoEmbedder
+import torch
 
 def clean_str(string):
     """
@@ -103,6 +104,14 @@ def batch_iter(data, batch_size, num_epochs, shuffle=True):
                 end_index = (batch_num + 1) * batch_size
                 yield shuffled_data[start_index:end_index]
 
+def extracting_embedding_from_elmo(arg, max_length):
+    elmo = ElmoEmbedder(options_file='/home/dejian/data/ELMO/elmo_options.json',
+                        weight_file='/home/dejian/data/ELMO/elmo_weights.hdf5', cuda_device=0)
+    arg_token = [sen.split(" ")[:max_length] for sen in arg]
+    arg_embedding, elmo_mask = elmo.batch_to_embeddings(arg_token)
+    torch.cuda.empty_cache()
+    arg_embed = arg_embedding.cpu().numpy()[:, 1, :, :]
+    return arg_embed
 
 if __name__ == '__main__':
     a = [[0, 1], [0, 1], [1, 0]]

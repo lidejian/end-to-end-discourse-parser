@@ -9,20 +9,27 @@ import config
 import os
 
 
+# ''' binary '''
+# # "PDTB_imp",
+# # "PDTB_imp_and_PDTB_exp"
+# # "PDTB_imp_and_BLLIP_exp"
+# dataset_type = "PDTB_imp"
+#
+# "Comparison",
+# "Contingency",
+# "Expansion",
+# "Temporal"
+# level1_type = "Comparison"
+# level1_type = "Contingency"
+# level1_type = "Expansion"
+# level1_type = "Temporal"
+# level1_type = "ExpEntRel"
+#
+# train_data_dir = config.DATA_PATH + "/binary/%s/%s" % (dataset_type, level1_type)
 
-# bert-as-service
-# https://github.com/hanxiao/bert-as-service
-# start service:
 
-# Base:
-# bert-serving-start -max_seq_len 100 -pooling_strategy NONE -model_dir /home/dejian/bert/uncased_L-12_H-768_A-12/  -num_worker=4
-
-
-# Large:
-# bert-serving-start -max_seq_len 100 -pooling_strategy NONE -model_dir /home/dejian/bert/uncased_L-24_H-1024_A-16/  -num_worker=4
-
-### bert-serving-start -pooling_strategy NONE -model_dir /home/dejian/bert/uncased_L-12_H-768_A-12/ -tuned_model_dir /home/dejian/pycharm_space/bert_linux/tmp/pdtb_output/ -num_worker=4
-
+# ''' four way'''
+# train_data_dir = config.DATA_PATH + "/four_way/PDTB_imp"
 
 
 # ''' sentense four eng'''
@@ -49,8 +56,8 @@ model = "CNN"
 # model = "Attention_RNN5"
 share_rep_weights = False
 bidirectional = False
+
 cell_type = "BasicLSTM"
-# cell_type = "TreeLSTM"
 hidden_size = 50
 num_layers = 1
 dropout_keep_prob = 0.5
@@ -60,7 +67,7 @@ batch_size = 64
 num_epochs = 20
 evaluate_every = 10
 
-cmd = "python train_bert_task.py" \
+cmd = "python elmo_end.py" \
       + " --train_data_dir %s" % train_data_dir \
       + " --model %s" % model \
       + " --share_rep_weights %s" % share_rep_weights \
@@ -74,6 +81,7 @@ cmd = "python train_bert_task.py" \
       + " --batch_size %s" % batch_size \
       + " --num_epochs %s" % num_epochs \
       + " --evaluate_every %s" % evaluate_every \
+
 
 
 # + " --blind %s" % blind \

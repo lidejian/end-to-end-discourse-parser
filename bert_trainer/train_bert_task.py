@@ -74,7 +74,7 @@ for attr, value in sorted(FLAGS.__flags.items()):
     print(("{}={}".format(attr.upper(), value)))
 print("")
 
-bidirectional=False
+bidirectional=True
 print(bidirectional)
 
 
@@ -91,7 +91,7 @@ model_mapping = {
 # for recording
 
 train_data_dir = FLAGS.train_data_dir
-record_file = config.RECORD_PATH + "/bert_task/four_way.csv"
+record_file = config.RECORD_PATH + "/bert_task/four_way_pair_Large.csv"
 
 print("==> record path: %s" % record_file)
 print()
@@ -122,7 +122,7 @@ configuration = {
 
     "w2v_type": "bert",
 }
-additional_conf = {}
+additional_conf = {"Bert_Large"}
 
 
 
@@ -161,20 +161,23 @@ if bert_servise:
     dev_arg = bc.encode(pair_dev_arg)
     test_arg = bc.encode(pair_test_arg)
 
-    with open("bert_train.pickle","wb") as fw:
-        pickle.dump(train_arg, fw)
-    with open("bert_dev.pickle","wb") as fw:
+    with open("%sbert_train_L.pickle" % config.BERT_PICKLE_PATH, "wb") as fw:
+        pickle.dump(train_arg, fw, protocol=4)
+
+    with open("%sbert_dev_L.pickle" % config.BERT_PICKLE_PATH, "wb") as fw:
         pickle.dump(dev_arg, fw)
-    with open("bert_test.pickle","wb") as fw:
+
+    with open("%sbert_test_L.pickle" % config.BERT_PICKLE_PATH, "wb") as fw:
         pickle.dump(test_arg, fw)
+    print("strore success")
 
     print('finish encode')
 else:
-    with open("/home/dejian/data/bert_pair_pdtb/bert_train.pickle", "rb") as fr:
+    with open("%sbert_train_L.pickle" % config.BERT_PICKLE_PATH, "rb") as fr:
         train_arg = pickle.load(fr)
-    with open("/home/dejian/data/bert_pair_pdtb/bert_dev.pickle", "rb") as fr:
+    with open("%sbert_dev_L.pickle" % config.BERT_PICKLE_PATH, "rb") as fr:
         dev_arg = pickle.load(fr)
-    with open("/home/dejian/data/bert_pair_pdtb/bert_test.pickle", "rb") as fr:
+    with open("%sbert_test_L.pickle" % config.BERT_PICKLE_PATH, "rb") as fr:
         test_arg = pickle.load(fr)
 
 # # Build vocabulary
@@ -231,7 +234,7 @@ with tf.Graph().as_default():
         if FLAGS.model == "CNN":
             model = CNN(
                 w2v_length=train_arg.shape[1],
-                arg_input=train_arg,
+                emb_size=train_arg.shape[2],
                 num_classes=train_labels.shape[1],
 
                 filter_sizes=[1,3,5],
@@ -240,7 +243,7 @@ with tf.Graph().as_default():
         else:
             model = model_mapping[FLAGS.model](
                 sent_length=train_arg.shape[1],
-                arg_input=train_arg,
+                emb_size=train_arg.shape[2],
                 num_classes=train_labels.shape[1],
 
                 cell_type=FLAGS.cell_type,

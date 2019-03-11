@@ -40,11 +40,11 @@ train_data_dir = config.DATA_PATH + "/gen_my_four_sen/imp"
 # blind = True
 
 
-model = "CNN"
+# model = "CNN"
 # model = "RNN"
 # model = "Attention_RNN1"
 # model = "Attention_RNN2" # mine
-# model = "Attention_RNN3"
+model = "Attention_RNN3"
 # model = "Attention_RNN4"
 # model = "Attention_RNN5"
 share_rep_weights = False
@@ -60,7 +60,7 @@ batch_size = 64
 num_epochs = 20
 evaluate_every = 10
 
-cmd = "python train_bert_task.py" \
+cmd = "python train_bert_task2.py" \
       + " --train_data_dir %s" % train_data_dir \
       + " --model %s" % model \
       + " --share_rep_weights %s" % share_rep_weights \

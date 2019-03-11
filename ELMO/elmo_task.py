@@ -8,11 +8,8 @@ from . import util
 import tensorflow as tf
 import numpy as np
 
-
 def _get_rnn_cell(cell_type, hidden_size, num_layers, dropout_keep_prob):
     cell = None
-    if cell_type == "TreeLSTM":
-        cell = BinaryTreeLSTMCell(hidden_size, keep_prob=1.0)
     if cell_type == "BasicLSTM":
         # cell = tf.nn.rnn_cell.BasicLSTMCell(hidden_size, forget_bias=1.0)
         cell = tf.contrib.rnn.BasicLSTMCell(hidden_size, forget_bias=1.0)
@@ -111,9 +108,8 @@ class RNN(object):
                  additional_conf={},
                  ):
 
-        # self.input_s1 = tf.placeholder(tf.int32, [None, sent_length], name="input_s1")
-        # self.input_s2 = tf.placeholder(tf.int32, [None, sent_length], name="input_s2")
-        self.input = tf.placeholder(tf.float32, [None, sent_length, emb_size], name="input_s2")
+        self.input_s1 = tf.placeholder(tf.float32, [None, sent_length, emb_size], name="input_s1")
+        self.input_s2 = tf.placeholder(tf.float32, [None, sent_length, emb_size], name="input_s2")
         self.input_y = tf.placeholder(tf.float32, [None, num_classes], name="input_y")
         self.dropout_keep_prob = tf.placeholder(tf.float32, name="dropout_keep_prob")
 
@@ -126,31 +122,61 @@ class RNN(object):
         #     self.embedded_s1 = tf.nn.embedding_lookup(embedding, self.input_s1)
         #     self.embedded_s2 = tf.nn.embedding_lookup(embedding, self.input_s2)
 
-        with tf.variable_scope("RNN"):
-            outputs, states, hidden_size = _get_rnn(
-                inputs=self.input,
-                cell_type=cell_type,
-                hidden_size=hidden_size,
-                num_layers=num_layers,
-                dropout_keep_prob=self.dropout_keep_prob,
-                bidirectional=bidirectional
-            )
+        if share_rep_weights:
+            with tf.variable_scope("RNN"):
+                outputs1, states1, _ = _get_rnn(
+                    inputs=self.input_s1,
+                    cell_type=cell_type,
+                    hidden_size=hidden_size,
+                    num_layers=num_layers,
+                    dropout_keep_prob=self.dropout_keep_prob,
+                    bidirectional=bidirectional
+                )
+
+                # share weights
+                tf.get_variable_scope().reuse_variables()
+
+                outputs2, states2, hidden_size = _get_rnn(
+                    inputs=self.input_s2,
+                    cell_type=cell_type,
+                    hidden_size=hidden_size,
+                    num_layers=num_layers,
+                    dropout_keep_prob=self.dropout_keep_prob,
+                    bidirectional=bidirectional
+                )
+        else:
+            with tf.variable_scope("RNN1"):
+                outputs1, states1, _ = _get_rnn(
+                    inputs=self.input_s1,
+                    cell_type=cell_type,
+                    hidden_size=hidden_size,
+                    num_layers=num_layers,
+                    dropout_keep_prob=self.dropout_keep_prob,
+                    bidirectional=bidirectional
+                )
+
+            with tf.variable_scope("RNN2"):
+                outputs2, states2, hidden_size = _get_rnn(
+                    inputs=self.input_s2,
+                    cell_type=cell_type,
+                    hidden_size=hidden_size,
+                    num_layers=num_layers,
+                    dropout_keep_prob=self.dropout_keep_prob,
+                    bidirectional=bidirectional
+                )
 
         # outputs1: (batch_size, num_steps, hidden_size)
         with tf.name_scope("output"):
-            # # simple concatenation + simple subtraction
-            #
-            # self.outputs1 = outputs1
-            # self.outputs2 = outputs2
-            # self.output_1 = util.last_relevant(outputs1, util.length(self.embedded_s1))
-            # self.output_2 = util.last_relevant(outputs2, util.length(self.embedded_s2))
+            # simple concatenation + simple subtraction
+
+            self.outputs1 = outputs1
+            self.outputs2 = outputs2
+            self.output_1 = util.last_relevant(outputs1, util.length(self.input_s1))
+            self.output_2 = util.last_relevant(outputs2, util.length(self.input_s2))
 
             # self.output = tf.concat(1, [self.output_1, self.output_2])
-            # self.output = tf.concat([self.output_1, self.output_2], 1)   # 1.0及以后版本：tensors在前，数字在后
-            # self.size = hidden_size * 2
-
-            self.output = util.last_relevant(outputs, util.length(self.input))
-            self.size = hidden_size
+            self.output = tf.concat([self.output_1, self.output_2], 1)   # 1.0及以后版本：tensors在前，数字在后
+            self.size = hidden_size * 2
 
         # Add dropout
         with tf.name_scope("dropout"):
@@ -186,7 +212,7 @@ class RNN(object):
 class Attention_RNN1(object):
     def __init__(self,
                  sent_length,
-                 emb_size,
+                 vocab_embeddings,
                  num_classes,
 
                  cell_type,
@@ -194,14 +220,13 @@ class Attention_RNN1(object):
                  num_layers,
                  bidirectional,
                  share_rep_weights,
-
                  batch_size,
-
                  l2_reg_lambda=0,
                  additional_conf={},
                  ):
 
-        self.input = tf.placeholder(tf.float32, [None, sent_length, emb_size], name="input_s2")
+        self.input_s1 = tf.placeholder(tf.int32, [None, sent_length], name="input_s1")
+        self.input_s2 = tf.placeholder(tf.int32, [None, sent_length], name="input_s2")
         self.input_y = tf.placeholder(tf.float32, [None, num_classes], name="input_y")
         self.dropout_keep_prob = tf.placeholder(tf.float32, name="dropout_keep_prob")
 
@@ -313,7 +338,7 @@ class Attention_RNN1(object):
 class Attention_RNN2(object):
     def __init__(self,
                  sent_length,
-                 emb_size,
+                 vocab_embeddings,
                  num_classes,
 
                  cell_type,
@@ -325,7 +350,7 @@ class Attention_RNN2(object):
                  batch_size,
 
                  l2_reg_lambda=0,
-                 additional_conf={}
+                 additional_conf={},
                  ):
 
         self.input_s1 = tf.placeholder(tf.int32, [None, sent_length], name="input_s1")
@@ -1170,71 +1195,78 @@ class CNN(object):
     """
     def __init__(
             self,
-            w2v_length,
+            sent_length,
             emb_size,
             num_classes,
-
             filter_sizes,
             num_filters,
             l2_reg_lambda=0.0):
         # Placeholders for input, output and dropout
-        # self.input_s1 = tf.placeholder(tf.int32, [None, w2v_length], name="input_s1")
-        # self.input_s2 = tf.placeholder(tf.int32, [None, w2v_length], name="input_s2")
-
-        self.input = tf.placeholder(tf.float32, [None, w2v_length, emb_size], name="input")
+        self.input_s1 = tf.placeholder(tf.float32, [None, sent_length, emb_size], name="input_s1")
+        self.input_s2 = tf.placeholder(tf.float32, [None, sent_length, emb_size], name="input_s2")
         self.input_y = tf.placeholder(tf.float32, [None, num_classes], name="input_y")
         self.dropout_keep_prob = tf.placeholder(tf.float32, name="dropout_keep_prob")
         # Keeping track of l2 regularization loss (optional)
         l2_loss = tf.constant(0.0)
 
-        # # Embedding layer
+        # Embedding layer
         # with tf.device('/cpu:0'), tf.name_scope("embedding"):
         #     embedding = tf.Variable(np.array(vocab_embeddings, dtype='float32'), trainable=False)
         #     self.embedded_s1 = tf.nn.embedding_lookup(embedding, self.input_s1)
         #     self.embedded_s2 = tf.nn.embedding_lookup(embedding, self.input_s2)
-        #
-        #     self.embedded_s1_expanded = tf.expand_dims(self.embedded_s1, -1)
-        #     self.embedded_s2_expanded = tf.expand_dims(self.embedded_s2, -1)
-        #
-        # embedding_size = vocab_embeddings.shape[1]
 
-        self.embedded_s_expanded = tf.expand_dims(self.input, -1)
+        self.embedded_s1_expanded = tf.expand_dims(self.input_s1, -1)
+        self.embedded_s2_expanded = tf.expand_dims(self.input_s2, -1)
+
         embedding_size = emb_size
 
         # Create a convolution + maxpool layer for each filter size
-        pooled_outputs_s = []
-        # pooled_outputs_s2 = []
+        pooled_outputs_s1 = []
+        pooled_outputs_s2 = []
         for i, filter_size in enumerate(filter_sizes):
             with tf.name_scope("conv-maxpool-%s" % filter_size):
                 # Convolution Layer
                 filter_shape = [filter_size, embedding_size, 1, num_filters]
                 W = tf.Variable(tf.truncated_normal(filter_shape, stddev=0.1), name="W")
                 b = tf.Variable(tf.constant(0.1, shape=[num_filters]), name="b")
-                conv_s = tf.nn.conv2d(
-                    self.embedded_s_expanded,
+                conv_s1 = tf.nn.conv2d(
+                    self.embedded_s1_expanded,
                     W,
                     strides=[1, 1, 1, 1],
                     padding="VALID",
-                    name="conv")
+                    name="conv1")
 
+                conv_s2 = tf.nn.conv2d(
+                    self.embedded_s2_expanded,
+                    W,
+                    strides=[1, 1, 1, 1],
+                    padding="VALID",
+                    name="conv2")
 
                 # Apply nonlinearity
-                h_s1 = tf.nn.tanh(tf.nn.bias_add(conv_s, b), name="tanh_s1")
-                # h_s2 = tf.nn.tanh(tf.nn.bias_add(conv_s2, b), name="tanh_s2")
+                h_s1 = tf.nn.tanh(tf.nn.bias_add(conv_s1, b), name="tanh_s1")
+                h_s2 = tf.nn.tanh(tf.nn.bias_add(conv_s2, b), name="tanh_s2")
 
 
-                pooled_s = tf.nn.max_pool(
+                pooled_s1 = tf.nn.max_pool(
                     h_s1,
-                    ksize=[1, w2v_length - filter_size + 1, 1, 1],
+                    ksize=[1, sent_length - filter_size + 1, 1, 1],
                     strides=[1, 1, 1, 1],
                     padding='VALID',
                     name="pool_s1")
-                pooled_outputs_s.append(pooled_s)
+                pooled_outputs_s1.append(pooled_s1)
 
+                pooled_s2 = tf.nn.max_pool(
+                    h_s2,
+                    ksize=[1, sent_length - filter_size + 1, 1, 1],
+                    strides=[1, 1, 1, 1],
+                    padding='VALID',
+                    name="pool_s2")
+                pooled_outputs_s2.append(pooled_s2)
 
         # Combine all the pooled features
-        num_filters_total = num_filters * len(filter_sizes)
-        self.h_pool = tf.concat(pooled_outputs_s,3)
+        num_filters_total = 2 * num_filters * len(filter_sizes)
+        self.h_pool = tf.concat(pooled_outputs_s1+pooled_outputs_s2,3)
         self.h_pool_flat = tf.reshape(self.h_pool, [-1, num_filters_total])
 
         # Add dropout

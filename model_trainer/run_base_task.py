@@ -47,10 +47,10 @@ train_data_dir = config.DATA_PATH + "/gen_my_four_sen/imp"
 # blind = True
 
 
-model = "CNN"
+# model = "CNN"
 # model = "RNN"
 # model = "Attention_RNN1"
-# model = "Attention_RNN2" # mine
+model = "Attention_RNN2" # mine
 # model = "Attention_RNN3"
 # model = "Attention_RNN4"
 # model = "Attention_RNN5"
@@ -59,7 +59,7 @@ bidirectional = False
 embedding = "Glove" # Glove or google_word_2_vec
 cell_type = "BasicLSTM"
 # cell_type = "TreeLSTM"
-hidden_size = 300
+hidden_size = 50
 num_layers = 1
 dropout_keep_prob = 0.5
 l2_reg_lambda = 0.0

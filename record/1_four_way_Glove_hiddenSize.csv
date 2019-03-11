@@ -4,9 +4,9 @@ f1,p,r,acc,train_data_dir,embedding,model,share_rep_weights,bidirectional,cell_t
 0.4175,0.4931,0.4065,0.5305,/home/dejian/end-to-end-discourse-parser/data/gen_my_four_sen/imp,google,RNN,TRUE,FALSE,BasicLSTM,50,1,0.5,0,AdaOptimizer,0.001,64,20,BLLIP_50?,{}
 0.3982,0.4857,0.3934,0.5305,/home/dejian/end-to-end-discourse-parser/data/gen_my_four_sen/imp,google,RNN,TRUE,TRUE,BasicLSTM,50,1,0.5,0,AdaOptimizer,0.001,64,20,BLLIP_50?,{}
 0.4012,0.4867,0.3935,0.5416,/home/dejian/end-to-end-discourse-parser/data/gen_my_four_sen/imp,google,RNN,TRUE,TRUE,BasicLSTM,50,1,0.5,0,AdaOptimizer,0.001,64,20,BLLIP_50?,{}
-0.3862,0.4885,0.3688,0.5416,/home/dejian/end-to-end-discourse-parser/data/gen_my_four_sen/imp,Glove,CNN,TRUE,FALSE,BasicLSTM,300,1,0.5,0,AdaOptimizer,0.001,64,20,Glove_300?,{}
-0.4006,0.5004,0.3794,0.5194,/home/dejian/end-to-end-discourse-parser/data/gen_my_four_sen/imp,Glove,CNN,TRUE,FALSE,BasicLSTM,50,1,0.5,0,AdaOptimizer,0.001,64,20,Glove_300?,{}
-0.4308,0.4477,0.4203,0.5194,/home/dejian/end-to-end-discourse-parser/data/gen_my_four_sen/imp,Glove,RNN,TRUE,FALSE,BasicLSTM,300,1,0.5,0,AdaOptimizer,0.001,64,20,Glove_300?,{}
-0.4322,0.4537,0.4359,0.5379,/home/dejian/end-to-end-discourse-parser/data/gen_my_four_sen/imp,Glove,RNN,TRUE,FALSE,BasicLSTM,50,1,0.5,0,AdaOptimizer,0.001,64,20,Glove_300?,{}
-0.4354,0.4437,0.4288,0.5028,/home/dejian/end-to-end-discourse-parser/data/gen_my_four_sen/imp,Glove,RNN,TRUE,TRUE,BasicLSTM,300,1,0.5,0,AdaOptimizer,0.001,64,20,Glove_300?,{}
-0.4176,0.4694,0.4044,0.5416,/home/dejian/end-to-end-discourse-parser/data/gen_my_four_sen/imp,Glove,RNN,TRUE,TRUE,BasicLSTM,50,1,0.5,0,AdaOptimizer,0.001,64,20,Glove_300?,{}
+0.3862,0.4885,0.3688,0.5416,/home/dejian/end-to-end-discourse-parser/data/gen_my_four_sen/imp,Glove,CNN,TRUE,FALSE,BasicLSTM,300,1,0.5,0,AdaOptimizer,0.001,64,20,Glove_300?,{Glove:840B/300}
+0.4006,0.5004,0.3794,0.5194,/home/dejian/end-to-end-discourse-parser/data/gen_my_four_sen/imp,Glove,CNN,TRUE,FALSE,BasicLSTM,50,1,0.5,0,AdaOptimizer,0.001,64,20,Glove_300?,{Glove:840B/300}
+0.4308,0.4477,0.4203,0.5194,/home/dejian/end-to-end-discourse-parser/data/gen_my_four_sen/imp,Glove,RNN,TRUE,FALSE,BasicLSTM,300,1,0.5,0,AdaOptimizer,0.001,64,20,Glove_300?,{Glove:840B/300}
+0.4322,0.4537,0.4359,0.5379,/home/dejian/end-to-end-discourse-parser/data/gen_my_four_sen/imp,Glove,RNN,TRUE,FALSE,BasicLSTM,50,1,0.5,0,AdaOptimizer,0.001,64,20,Glove_300?,{Glove:840B/300}
+0.4354,0.4437,0.4288,0.5028,/home/dejian/end-to-end-discourse-parser/data/gen_my_four_sen/imp,Glove,RNN,TRUE,TRUE,BasicLSTM,300,1,0.5,0,AdaOptimizer,0.001,64,20,Glove_300?,{Glove:840B/300}
+0.4176,0.4694,0.4044,0.5416,/home/dejian/end-to-end-discourse-parser/data/gen_my_four_sen/imp,Glove,RNN,TRUE,TRUE,BasicLSTM,50,1,0.5,0,AdaOptimizer,0.001,64,20,Glove_300?,{Glove:840B/300}

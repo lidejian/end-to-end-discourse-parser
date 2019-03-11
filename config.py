@@ -9,8 +9,13 @@ if hostname == "Precision-Tower-5810": #linux 服务器
     GOOGLE_WORD2VEC_PATH = "/home/dejian/data/word2vec/GoogleNews/GoogleNews-vectors-negative300.bin"
     BLLIP_WORD2VEC_PATH = "/home/dejian/data/BLLIP_parsed/bllip.vectors.bin"
     ZH_WORD2VEC_PATH = "/home/dejian/data/word2vec/zh-Gigaword-300.txt"
-    # GLOVE_PATH = "/home/dejian/data/glove.840B.300d/glove.840B.300d.txt"
-    GLOVE_PATH = "/home/dejian/data/glove/glove.6B.50d.txt"
+    GLOVE_PATH = "/home/dejian/data/glove.840B.300d/glove.840B.300d.txt"
+    # GLOVE_PATH = "/home/dejian/data/glove/glove.6B.300d.txt"
+
+    BERT_PICKLE_PATH = "/home/dejian/data/bert_pair_pdtb/"
+    ELMO_PICKLE_PATH = "/home/dejian/data/elmo_pdtb/ELMo.pickle"
+    ELMO_PICKLE_PATH1 = "/home/dejian/data/elmo_pdtb/ELMo1.pickle"
+    ELMO_PICKLE_PATH2 = "/home/dejian/data/elmo_pdtb/ELMo2.pickle"
 else:   # windows
     CWD = "D:/PY/Pycode/project/end-to-end-discourse-parser"
     GOOGLE_WORD2VEC_PATH = "D:/data/word2vec/GoogleNews/GoogleNews-vectors-negative300.bin"

@@ -1,12 +1,7 @@
-#!/usr/bin/env python
-#encoding: utf-8
+# -*- coding:utf-8 -*-
 import sys
-import colored
-import imp
-imp.reload(sys)
-# sys.setdefaultencoding('utf-8')
 sys.path.append("../")
-from model_trainer.base_task import RNN, Attention_RNN1, Attention_RNN2, Attention_RNN3, Attention_RNN4, \
+from ELMO.elmo_task import RNN, Attention_RNN1, Attention_RNN2, Attention_RNN3, Attention_RNN4, \
     Attention_RNN5, Attention_RNN6, CNN
 from record import do_record
 from confusion_matrix import Alphabet
@@ -14,19 +9,18 @@ from confusion_matrix import ConfusionMatrix
 import datetime
 from tensorflow.contrib import learn
 import config
-import data_helpers
-import util
+import elmo_data_helpers
+# import util
 import tensorflow as tf
+import pickle
 import numpy as np
-import argparse
 # from scorer import get_rank_score_by_file
 import time
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
+import pickle
 
-# from sys import version_infovim
-# print(tf.__version__)
-# print(version_info)
+
 timestamp = time.time()
 
 
@@ -64,7 +58,7 @@ tf.app.flags.DEFINE_boolean("allow_soft_placement", True, "Allow device soft dev
 tf.app.flags.DEFINE_boolean("log_device_placement", False, "Log placement of ops on devices")
 
 # embedding
-tf.app.flags.DEFINE_string("embedding", "Glove", "embedding(default:'Glove')")
+tf.app.flags.DEFINE_string("embedding", "ELMO", "embedding(default:'Glove')")
 
 
 # FLAGS._parse_flags()
@@ -74,11 +68,13 @@ print("\nParameters:")
 for attr, value in FLAGS.__flags.items():
     print(("{}={}".format(attr, value.value)))
 print("")
-bidirectional=False
-print(FLAGS.train_data_dir)
-print('model:', FLAGS.model)
+
+
+ELMO_origin = False
+bidirectional=True
+
 print(bidirectional)
-print(FLAGS.hidden_size)
+print("hidden_size:", FLAGS.hidden_size)
 
 
 model_mapping = {
@@ -91,22 +87,7 @@ model_mapping = {
     "Attention_RNN6": Attention_RNN6
 }
 
-# for recording
-
-train_data_dir = FLAGS.train_data_dir
-# if "conll" in train_data_dir:
-#     if FLAGS.blind:
-#         record_file = config.RECORD_PATH + "/base_task/conll_blind.csv"
-#     else:
-#         record_file = config.RECORD_PATH + "/base_task/conll.csv"
-# elif "ZH" in train_data_dir:
-#     if FLAGS.blind:
-#         record_file = config.RECORD_PATH + "/base_task/zh_blind.csv"
-#     else:
-#         record_file = config.RECORD_PATH + "/base_task/zh.csv"
-# else:
-record_file = config.RECORD_PATH + "/base_task/four_way.csv"
-
+record_file = config.RECORD_PATH + "/elmo_task/four_way.csv"
 print("==> record path: %s" % record_file)
 print()
 
@@ -135,66 +116,67 @@ configuration = {
     "batch_size": FLAGS.batch_size,
     "num_epochs": FLAGS.num_epochs,
 
-    "w2v_type":FLAGS.embedding,
+    "w2v_type": "ELMO",
 }
-additional_conf = {"BLLIP"}
+additional_conf = {"ELMO:2"}
 
 
+max_document_length = 100
 
-# Data Preparation
-# ==================================================
-
-# Load data
-print("Loading data...")
-# level1_sense = FLAGS.level1_sense
-# dataset_type = FLAGS.dataset_type
-
-
-
-train_data_dir = FLAGS.train_data_dir   # 'D:/PY/Pycode/project/end-to-end-discourse-parser/data/four_way/PDTB_imp'
+train_data_dir = FLAGS.train_data_dir
+# train_data_dir = '/home/dejian/end-to-end-discourse-parser/data/gen_my_four_sen/imp'
 # 准备原始数据文本
-train_arg1s, train_arg2s, train_labels = data_helpers.load_data_and_labels("%s/train" % train_data_dir)
-dev_arg1s, dev_arg2s, dev_labels = data_helpers.load_data_and_labels("%s/dev" % train_data_dir)
-test_arg1s, test_arg2s, test_labels = data_helpers.load_data_and_labels("%s/test" % train_data_dir)
+train_arg1s, train_arg2s, train_labels = elmo_data_helpers.load_data_and_labels("%s/train" % train_data_dir)
+dev_arg1s, dev_arg2s, dev_labels = elmo_data_helpers.load_data_and_labels("%s/dev" % train_data_dir)
+test_arg1s, test_arg2s, test_labels = elmo_data_helpers.load_data_and_labels("%s/test" % train_data_dir)
 
 num_classes = train_labels.shape[1]
 
+print('ELMo from origin:%d' % ELMO_origin)
+if ELMO_origin:
+    all_text = train_arg1s + train_arg2s + dev_arg1s + dev_arg2s + test_arg1s + test_arg2s
+    all_text_embed=[]
+    batch_size=200
+    for i in range(0,len(all_text),batch_size):
+        temp_text_embed = elmo_data_helpers.extracting_embedding_from_elmo(all_text[i:i+batch_size], max_document_length)
+        all_text_embed.extend(temp_text_embed)
+        print("total-present:%d-%d"%(len(all_text),i))
 
-print("num_classes", num_classes)
+    print('extend elmo embedding...')
+    for i in range(len(all_text_embed)):
+        zeros = np.zeros((1, all_text_embed[0].shape[1]))
+        while all_text_embed[i].shape[0] < 100:
+            all_text_embed[i] = np.append(all_text_embed[i], zeros, axis=0)
+    print('extend elmo embedding finished.')
 
-# Build vocabulary
-max_document_length = 100
-all_text = train_arg1s + train_arg2s + dev_arg1s + dev_arg2s + test_arg1s + test_arg2s
-vocab_processor = learn.preprocessing.VocabularyProcessor(max_document_length)
-vocab_processor.fit(all_text)
+    with open(config.ELMO_PICKLE_PATH2, "wb") as fw:
+        pickle.dump(all_text_embed, fw)
+        print('store elmo embedding success')
 
-# transform 将arg从list文本变为对应的词的编号的二维数组
-# arg:
-# 句子1：word1 word2 word3 ... wordn
-# 句子2：。。。
-# 句子n:...
-# -------->[n,100]:
-# [
-#     [345,56,453...34,0,0,0,0,0](总共100维)
-#     ...
-#     [23,.....] (第n行)
-# ]
-train_arg1s = np.array(list(vocab_processor.transform(train_arg1s)))
-train_arg2s = np.array(list(vocab_processor.transform(train_arg2s)))
-dev_arg1s = np.array(list(vocab_processor.transform(dev_arg1s)))
-dev_arg2s = np.array(list(vocab_processor.transform(dev_arg2s)))
-test_arg1s = np.array(list(vocab_processor.transform(test_arg1s)))
-test_arg2s = np.array(list(vocab_processor.transform(test_arg2s)))
-
-
-# load word embedding matrix 词向量:(n,m)n为所有文本单词个数，即下面的Vocabulary Size，m为词向量维度，google_news中为300。
-vocab_embeddings = \
-    util.load_embedding(train_data_dir, vocab_processor.vocabulary_._mapping, FLAGS.embedding, from_origin=True)
+print('load elmo embedding ...')
+with open(config.ELMO_PICKLE_PATH2, "rb") as fr:
+    all_text_embed = pickle.load(fr)
+    print('load elmo embedding success')
+    print()
 
 
 
-print(("Vocabulary Size: {:d}".format(len(vocab_processor.vocabulary_))))
-print(("Train/Dev/Test split: {:d}/{:d}/{:d}".format(len(train_labels), len(dev_labels), len(test_labels))))
+cnt=0
+train_arg1_embedd = all_text_embed[0:cnt+len(train_arg1s)]
+cnt=cnt+len(train_arg1s)
+train_arg2_embedd = all_text_embed[cnt:cnt+len(train_arg2s)]
+cnt=cnt+len(train_arg2s)
+
+dev_arg1_embedd = all_text_embed[cnt:cnt+len(dev_arg1s)]
+cnt=cnt+len(dev_arg1s)
+dev_arg2_embedd = all_text_embed[cnt:cnt+len(dev_arg2s)]
+cnt=cnt+len(dev_arg2s)
+
+test_arg1_embedd = all_text_embed[cnt:cnt+len(test_arg1s)]
+cnt=cnt+len(test_arg1s)
+test_arg2_embedd = all_text_embed[cnt:cnt+len(test_arg2s)]
+cnt=cnt+len(test_arg2s)
+
 
 
 ''' Training '''
@@ -215,17 +197,17 @@ with tf.Graph().as_default():
     with sess.as_default():
         if FLAGS.model == "CNN":
             model = CNN(
-                w2v_length=train_arg1s.shape[1],
-                vocab_embeddings=vocab_embeddings,
+                sent_length=train_arg1_embedd[0].shape[0],
+                emb_size=train_arg1_embedd[0].shape[1],
                 num_classes=train_labels.shape[1],
 
-                filter_sizes=[1, 3, 5],
+                filter_sizes=[1,3,5],
                 num_filters=100,
             )
         else:
             model = model_mapping[FLAGS.model](
-                sent_length=train_arg1s.shape[1],
-                vocab_embeddings=vocab_embeddings,
+                sent_length=train_arg1_embedd[0].shape[0],
+                emb_size=train_arg1_embedd[0].shape[1],
                 num_classes=train_labels.shape[1],
 
                 cell_type=FLAGS.cell_type,
@@ -323,7 +305,7 @@ with tf.Graph().as_default():
 
         def _prediction_on_dev(best_score, best_output_string):
 
-            confusionMatrix = test_step(dev_arg1s, dev_arg2s, dev_labels, test_str='dev') #得到4*4的矩阵
+            confusionMatrix = test_step(dev_arg1_embedd, dev_arg2_embedd, dev_labels, test_str='dev') #得到4*4的矩阵
 
             acc = confusionMatrix.get_accuracy()
             # 对着 f1 调
@@ -381,7 +363,7 @@ with tf.Graph().as_default():
             model_file = tf.train.latest_checkpoint('ckpt/')
             saver.restore(sess, model_file)
 
-            confusionMatrix = test_step(dev_arg1s, dev_arg2s, dev_labels, test_str='dev') #得到4*4的矩阵
+            confusionMatrix = test_step(dev_arg1_embedd, dev_arg2_embedd, dev_labels, test_str='dev') #得到4*4的矩阵
             acc = confusionMatrix.get_accuracy()
             curr_output_string = confusionMatrix.get_matrix() + confusionMatrix.get_summary()
             print("\nEvaluation on Dev:")
@@ -390,7 +372,7 @@ with tf.Graph().as_default():
 
 
 
-            confusionMatrix = test_step(test_arg1s, test_arg2s, test_labels, test_str='test') #得到4*4的矩阵
+            confusionMatrix = test_step(test_arg1_embedd, test_arg2_embedd, test_labels, test_str='test') #得到4*4的矩阵
             acc = confusionMatrix.get_accuracy()
             curr_output_string = confusionMatrix.get_matrix() + confusionMatrix.get_summary()
             print("\nEvaluation on test:")
@@ -399,8 +381,8 @@ with tf.Graph().as_default():
 
 
         # Generate batches
-        batches = data_helpers.batch_iter(
-            list(zip(train_arg1s, train_arg2s, train_labels)), FLAGS.batch_size, FLAGS.num_epochs, shuffle=True)
+        batches = elmo_data_helpers.batch_iter(
+            list(zip(train_arg1_embedd, train_arg2_embedd, train_labels)), FLAGS.batch_size, FLAGS.num_epochs, shuffle=True)
 
         best_score = 0.0
         best_output_string = ""

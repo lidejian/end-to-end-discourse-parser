@@ -75,7 +75,8 @@ def do_record(fieldnames, configuration, additional_conf, evaluation_result, rec
 
 
     # remove same rows
-    rows = list(map(eval, set(map(str, rows))))
+    # rows = list(map(eval, set(map(str, rows))))
+
     # sort by dev score
     # rows = sorted(rows, key=lambda x: float(x["f1"]), reverse=True)
 

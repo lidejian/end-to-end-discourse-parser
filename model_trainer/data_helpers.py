@@ -39,6 +39,9 @@ def load_data_and_labels(dir):
         arg1s = [clean_str(line.strip()) for line in fin_arg1]
         arg2s = [clean_str(line.strip()) for line in fin_arg2]
 
+        arg1s = [s.lower() for s in arg1s]
+        arg2s = [s.lower() for s in arg2s]
+
         labels = [int(x.strip()) for x in fin_label]
         num_classes = max(labels) + 1
         if num_classes == 14:

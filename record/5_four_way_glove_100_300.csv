@@ -1,0 +1,11 @@
+f1,p,r,acc,train_data_dir,embedding,model,share_rep_weights,bidirectional,cell_type,hidden_size,num_layers,dropout_keep_prob,l2_reg_lambda,Optimizer,learning_rate,batch_size,num_epochs,w2v_type,additional_conf
+0.4035,0.5037,0.3827,0.5490,/home/dejian/end-to-end-discourse-parser/data/gen_my_four_sen/imp,Glove,CNN,True,True,BasicLSTM,50,1,0.5,0.0,AdaOptimizer,0.001,64,20,Glove,{'Glove:6B/100'}
+0.3753,0.4660,0.3744,0.5157,/home/dejian/end-to-end-discourse-parser/data/gen_my_four_sen/imp,Glove,RNN,True,False,BasicLSTM,50,1,0.5,0.0,AdaOptimizer,0.001,64,20,Glove,{'Glove:6B/100'}
+0.3819,0.4734,0.3807,0.5194,/home/dejian/end-to-end-discourse-parser/data/gen_my_four_sen/imp,Glove,RNN,True,False,BasicLSTM,50,1,0.5,0.0,AdaOptimizer,0.001,64,20,Glove,{'Glove:6B/100'}
+0.3875,0.4630,0.3823,0.5213,/home/dejian/end-to-end-discourse-parser/data/gen_my_four_sen/imp,Glove,RNN,True,True,BasicLSTM,50,1,0.5,0.0,AdaOptimizer,0.001,64,20,Glove,{'Glove:6B/100'}
+0.3888,0.4849,0.3831,0.5250,/home/dejian/end-to-end-discourse-parser/data/gen_my_four_sen/imp,Glove,RNN,True,True,BasicLSTM,50,1,0.5,0.0,AdaOptimizer,0.001,64,20,Glove,{'Glove:6B/100'}
+0.3811,0.4331,0.3660,0.5046,/home/dejian/end-to-end-discourse-parser/data/gen_my_four_sen/imp,Glove,CNN,True,True,BasicLSTM,50,1,0.5,0.0,AdaOptimizer,0.001,64,20,Glove,{'Glove:6B/300'}
+0.4301,0.5363,0.4172,0.5564,/home/dejian/end-to-end-discourse-parser/data/gen_my_four_sen/imp,Glove,RNN,True,False,BasicLSTM,50,1,0.5,0.0,AdaOptimizer,0.001,64,20,Glove,{'Glove:6B/300'}
+0.4101,0.4821,0.3983,0.5564,/home/dejian/end-to-end-discourse-parser/data/gen_my_four_sen/imp,Glove,RNN,True,False,BasicLSTM,50,1,0.5,0.0,AdaOptimizer,0.001,64,20,Glove,{'Glove:6B/300'}
+0.4154,0.4618,0.4015,0.5250,/home/dejian/end-to-end-discourse-parser/data/gen_my_four_sen/imp,Glove,RNN,True,True,BasicLSTM,50,1,0.5,0.0,AdaOptimizer,0.001,64,20,Glove,{'Glove:6B/300'}
+0.4033,0.4442,0.3939,0.5287,/home/dejian/end-to-end-discourse-parser/data/gen_my_four_sen/imp,Glove,RNN,True,True,BasicLSTM,50,1,0.5,0.0,AdaOptimizer,0.001,64,20,Glove,{'Glove:6B/300'}
